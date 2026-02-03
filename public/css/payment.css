@@ -1,0 +1,10 @@
+:root {
+        --primary-red: #C41E3A;
+        --dark-blue: #1B3A52;
+        --accent-blue: #2A5475;
+    }
+    
+    body { background-color: #050505; color: white; }
+    .payment-option { border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; cursor: pointer; }
+    .payment-option:hover { border-color: var(--primary-red); background: rgba(196,30,58,0.05); }
+    .payment-option.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }

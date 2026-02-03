@@ -1,0 +1,22 @@
+:root { 
+        --primary-red: #C41E3A; 
+        --dark-blue: #1B3A52;
+        --accent-blue: #2A5475;
+    }
+    body { background-color: #050505; color: white; }
+    .glass-panel { background: #111; border: 1px solid rgba(255,255,255,0.05); }
+    .input-field { background: #0a0a0a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; width: 100%; transition: 0.3s; }
+    .input-field:focus { border-color: var(--primary-red); outline: none; }
+    
+    /* TABS */
+    .tab-btn { text-align: left; padding: 12px 20px; border-radius: 8px; color: #888; transition: 0.2s; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .tab-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+    .tab-btn.active { background: rgba(196, 30, 58, 0.1); color: var(--primary-red); border-left: 3px solid var(--primary-red); }
+    
+    /* SWITCH */
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary-red); }
+    input:checked + .slider:before { transform: translateX(20px); }

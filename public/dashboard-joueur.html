@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealFive | Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 
+    neon: '#EF1A2D', // Vrai rouge sportif (Scuderia Ferrari)
+    anthracite: '#1F2937', // Gris anthracite pur
+    black: '#080808', 
+    sidebar: '#0C0C0C' 
+}, fontFamily: { orbitron: ['Orbitron'], inter: ['Inter'] } } } }
+    </script>
+    <link rel="stylesheet" href="/css/dashboard-joueur.css">
+</head>
+<body class="font-inter h-screen flex">
+
+     <aside class="w-64 bg-sidebar flex flex-col border-r border-white/5 hidden md:flex z-20">
+       <div class="h-20 flex items-center px-6 border-b border-white/5">
+        <img src="image/logo.png" alt="RealFive Logo" class="h-12 w-auto object-contain">
+    </div>
+        <nav class="flex-1 py-8 space-y-2">
+            <a href="/dashboard-joueur.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Tableau de bord</a>
+            <a href="/reservation.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Réserver</a>
+            <a href="/stats.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">
+            Statistiques</a>
+            <a href="/friends.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Amis</a>
+            <a href="/profile.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Profil</a>
+        </nav>
+        <div class="p-6 border-t border-white/5">
+            <div class="font-bold text-white text-xs truncate" id="user-name">...</div>
+            <button onclick="logout()" class="text-[10px] text-gray-500 hover:text-red-500 mt-2 uppercase font-bold">Déconnexion</button>
+        </div>
+    </aside>
+
+
+    <main class="flex-1 overflow-y-auto relative bg-[#050505]">
+        
+        <div class="relative w-full h-[400px]">
+            <img src="image/vestiaire.png" alt="Ambiance" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-[#050505]/40 to-[#050505]"></div>
+            
+            <div class="absolute bottom-0 w-full px-8 pb-12">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="font-orbitron text-4xl md:text-5xl font-black mb-6 drop-shadow-lg text-white">
+                        REJOINDRE UN <span class="text-neon">LOBBY</span>
+                    </h1>
+                    <div class="flex gap-0 bg-[#111]/80 backdrop-blur-md rounded-lg border border-white/20 max-w-lg overflow-hidden shadow-2xl shadow-neon/5">
+                        <input type="text" id="lobbyCode" placeholder="CODE (EX: M-4829)" class="flex-1 bg-transparent text-white px-6 py-4 outline-none font-orbitron tracking-widest uppercase placeholder-gray-500 text-lg">
+                        <button onclick="joinLobby()" class="bg-neon text-black font-black px-8 py-4 uppercase text-sm hover:bg-white transition hover:scale-105 duration-200">GO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-8 pb-12">
+            
+            <div class="flex items-end mb-6 border-b border-white/10 gap-8">
+                <button onclick="switchTab('my-matches')" id="tab-my-matches" class="pb-4 border-b-2 border-neon text-white font-orbitron font-bold text-sm tracking-widest transition">MES MATCHS</button>
+                <button onclick="switchTab('mercato')" id="tab-mercato" class="pb-4 border-b-2 border-transparent text-gray-500 hover:text-white font-orbitron font-bold text-sm tracking-widest transition">MERCATO <span class="bg-neon/20 text-neon text-[10px] px-2 py-0.5 rounded ml-2 animate-pulse">LIVE</span></button>
+                <div class="flex-1 text-right pb-4">
+                    <button onclick="window.location.href='/reservation.html'" class="text-black bg-neon text-[10px] font-bold uppercase px-4 py-2 rounded hover:bg-white transition">+ Nouveau</button>
+                </div>
+            </div>
+            
+            <div id="section-my-matches" class="space-y-4">
+                <p class="text-gray-500 text-sm italic animate-pulse">Chargement...</p>
+            </div>
+
+            <div id="section-mercato" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                </div>
+
+        </div>
+    </main>
+
+    <script src="/js/dashboard-joueur.js"></script>
+    <script src="/js/mobile-navbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Événements & Contact - RealFive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#EF1A2D', anthracite: '#1F2937', black: '#080808' },
+                    fontFamily: { orbitron: ['Orbitron', 'sans-serif'], inter: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-black font-inter text-white selection:bg-neon selection:text-black">
+
+    <header class="w-full max-w-[1400px] mx-auto px-8 py-8 flex justify-between items-center z-50">
+        <a href="index.html" class="flex items-center gap-4 group">
+            <img src="image/logo.png" alt="Logo" class="h-12 w-auto">
+        </a>
+             <nav class="hidden md:flex gap-12">
+    <a href="complexe.html" class="...">Complexe</a>
+    <a href="tarifs.html" class="...">Tarifs</a>
+    <a href="events.html" class="...">Événements</a>
+    <a href="login.html" class="...">Réservation</a>
+</nav>
+        <a href="login.html" class="font-orbitron text-xs font-bold border border-white/30 px-6 py-2 rounded hover:bg-neon hover:border-neon transition uppercase">Connexion</a>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-8 py-12">
+        
+        <h1 class="font-orbitron text-center text-5xl font-black mb-4">ÉVÉNEMENTS</h1>
+        <p class="text-center text-gray-400 mb-16 max-w-2xl mx-auto">Sport, plaisir et convivialité pour vos moments spéciaux.</p>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-24">
+            <div class="bg-[#111] border border-white/10 rounded-2xl overflow-hidden group">
+                <div class="h-48 bg-gray-800 relative flex items-center justify-center">
+                    <div class="absolute inset-0 bg-neon/10 group-hover:bg-neon/20 transition duration-500"></div>
+                     <img 
+            src="image/anniversaire.jpg" 
+            alt="Anniversaires RealFive" 
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        >
+                </div>
+                <div class="p-8">
+                    <h3 class="font-orbitron font-bold text-2xl mb-2 text-white">ANNIVERSAIRES </h3>
+                    <p class="text-gray-400 text-sm mb-6">Offrez une expérience inoubliable avec foot, goûter et replay des matchs.</p>
+                    <button class="text-neon font-bold text-xs uppercase tracking-widest hover:text-white transition">Nous contacter &rarr;</button>
+                </div>
+            </div>
+
+            <div class="bg-[#111] border border-white/10 rounded-2xl overflow-hidden group">
+                <div class="h-48 bg-gray-800 relative flex items-center justify-center">
+                    <div class="absolute inset-0 bg-blue-500/10 group-hover:bg-blue-500/20 transition duration-500"></div>
+                    <img 
+            src="image/entreprise.jpg" 
+            alt="Entreprise RealFive" 
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        >
+                </div>
+                <div class="p-8">
+                    <h3 class="font-orbitron font-bold text-2xl mb-2 text-white">TEAM BUILDING </h3>
+                    <p class="text-gray-400 text-sm mb-6">Renforcez la cohésion de vos équipes autour des valeurs du sport et du fair-play.</p>
+                    <button class="text-neon font-bold text-xs uppercase tracking-widest hover:text-white transition">Demander un devis &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <section class="border-t border-white/10 pt-16 grid md:grid-cols-2 gap-12">
+            <div>
+                <h2 class="font-orbitron text-2xl font-bold mb-6 text-white">NOUS TROUVER </h2>
+                <div class="space-y-4 text-sm text-gray-300">
+                    <p class="flex items-start gap-3">
+                        <span class="text-neon mt-1">📍</span>
+                        <span>247, Rue du Chêne Brulé,<br>54700 LESMÉNILS (Bâtiment A) </span>
+                    </p>
+                    <p class="flex items-center gap-3">
+                        <span class="text-neon">🕒</span>
+                        <span>Lun-Dim: 09h00 - 01h00 </span>
+                    </p>
+                    <p class="flex items-center gap-3">
+                        <span class="text-neon">🅿️</span>
+                        <span>Parking gratuit sur place (PMR inclus) </span>
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="font-orbitron text-2xl font-bold mb-6 text-white">CONTACT </h2>
+                <form class="space-y-4">
+                    <input type="email" placeholder="Votre Email" class="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-neon outline-none transition">
+                    <textarea placeholder="Votre message..." rows="4" class="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-neon outline-none transition"></textarea>
+                    <button type="submit" class="bg-white text-black font-bold uppercase text-xs px-8 py-3 rounded hover:bg-neon transition">Envoyer</button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>

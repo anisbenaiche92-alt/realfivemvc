@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>War Room | RealFive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#EF1A2D', teamA: '#4DFF99', teamB: '#FF4D4D', dark: '#050505', panel: '#0F0F0F' },
+                    fontFamily: { orbitron: ['Orbitron', 'sans-serif'], rajdhani: ['Rajdhani', 'sans-serif'] },
+                    boxShadow: { 'neon': '0 0 10px rgba(77, 255, 153, 0.3), 0 0 20px rgba(77, 255, 153, 0.1)' }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/css/match.css">   
+</head>
+<body class="font-rajdhani">
+
+    <div class="noise-bg"></div>
+    <div class="spotlight hidden md:block"></div>
+
+   <header class="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 glass-header z-30 shrink-0 relative w-full">
+    
+    <div class="flex items-center z-20 w-1/4">
+        <button onclick="window.location.href='/dashboard-joueur.html'" class="flex items-center gap-2 group text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition">
+            <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-neon group-hover:bg-neon/10 transition bg-black/50">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </div>
+            <span class="hidden lg:inline">Retour</span>
+        </button>
+    </div>
+
+    <div class="flex flex-col items-center justify-center absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+        <div class="hidden md:block text-center">
+            <h1 class="font-orbitron font-black text-2xl text-white tracking-tighter leading-none whitespace-nowrap">WAR <span class="text-neon">ROOM</span></h1>
+            <div class="flex items-center justify-center gap-2 mt-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse shadow-neon"></span>
+                <span class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold" id="match-venue">CHARGEMENT...</span>
+            </div>
+        </div>
+        <div class="md:hidden flex flex-col items-center pointer-events-auto">
+            <div id="countdown-mob" class="font-orbitron font-black text-xl text-white tabular-nums tracking-widest leading-none drop-shadow-neon">--:--</div>
+            <span class="text-[8px] text-gray-500 uppercase font-bold tracking-[0.2em]">CHRONO</span>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 md:gap-3 z-20 w-full md:w-auto lg:w-3/4 flex-1">
+        
+        <div class="hidden md:flex items-center justify-end gap-3 w-full">
+            
+            <div class="bg-black/50 border border-white/10 px-3 lg:px-5 py-2 rounded-lg flex flex-col items-center shadow-lg shrink-0">
+                <span class="text-[8px] text-gray-500 uppercase font-black tracking-[0.2em] mb-0.5">COUP D'ENVOI</span>
+                <div id="countdown-desk" class="font-orbitron font-black text-lg lg:text-2xl text-white tabular-nums tracking-widest leading-none">--:--:--</div>
+            </div>
+
+            <button id="btn-public-desk" onclick="togglePublic()" class="flex border border-dashed border-white/30 text-gray-400 w-10 h-10 lg:w-auto lg:h-auto lg:px-4 lg:py-3 rounded items-center justify-center gap-2 text-xs font-bold uppercase hover:text-white hover:border-white transition shrink-0">
+             <span class="text-base">🌐</span> 
+             <span class="hidden lg:inline">PUBLIC</span>
+            </button>
+            
+            <div class="flex items-center gap-3 bg-[#0F0F0F] pl-4 pr-3 py-1.5 rounded border border-white/10 cursor-pointer hover:border-neon/50 transition group shrink-0" onclick="copyCode()">
+                <div class="flex flex-col items-end">
+                    <span class="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-tight">Code</span>
+                    <span class="font-orbitron font-bold text-white text-lg tracking-widest group-hover:text-neon transition tabular-nums w-[80px] text-center whitespace-nowrap overflow-hidden" id="match-code-desk">...</span>
+                </div>
+                <div class="w-8 h-8 rounded bg-white/5 flex items-center justify-center group-hover:bg-neon/20 transition">
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </div>
+            </div>
+            
+            <button onclick="openInviteModal()" class="bg-neon text-black px-4 lg:px-6 py-2.5 rounded text-xs font-black uppercase tracking-wider hover:bg-white hover:shadow-neon transition transform hover:-translate-y-0.5 whitespace-nowrap shrink-0">
+                <span class="hidden lg:inline">Inviter</span>
+                <span class="lg:hidden text-lg">+</span>
+            </button>
+
+            <button onclick="leaveMatch()" class="bg-transparent border border-red-500/30 text-red-500 w-10 h-10 lg:w-auto lg:h-auto lg:px-4 lg:py-2.5 rounded flex items-center justify-center text-xs font-bold uppercase hover:bg-red-500 hover:text-white transition shrink-0" title="Quitter">
+                <span class="hidden lg:inline">Quitter</span>
+                <svg class="lg:hidden w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+
+        <button onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-neon text-black font-bold shadow-neon active:scale-90 transition">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+        </button>
+    </div>
+</header>
+
+    <div class="flex-1 relative overflow-hidden flex flex-col md:flex-row w-full z-10">
+        
+        <div id="panel-squads" class="mobile-hidden force-flex-desktop w-full md:w-80 hud-panel border-r border-white/5 flex-col h-full bg-[#050505] z-20">
+    
+    <div class="flex-1 p-5 border-b border-white/5 overflow-y-auto custom-scroll flex flex-col">
+        <div class="flex justify-between items-center mb-4 bg-neon/5 p-2 rounded border border-neon/10">
+            <input type="text" id="name-A" onblur="saveTeamNames()" class="bg-transparent text-neon font-orbitron font-black text-sm tracking-wider w-full outline-none placeholder-neon/50 uppercase" value="DOMICILE" disabled>
+            <span id="count-A" class="bg-neon text-black px-2 py-0.5 rounded text-[10px] font-bold ml-2">0/5</span>
+        </div>
+        
+        <div id="list-A" class="space-y-2 flex-1"></div>
+        </div>
+
+    <div class="flex-1 p-5 overflow-y-auto custom-scroll bg-gradient-to-b from-transparent to-red-900/10 flex flex-col">
+        <div class="flex justify-between items-center mb-4 bg-red-500/5 p-2 rounded border border-red-500/10">
+            <input type="text" id="name-B" onblur="saveTeamNames()" class="bg-transparent text-red-500 font-orbitron font-black text-sm tracking-wider w-full outline-none placeholder-red-500/50 uppercase" value="EXTÉRIEUR" disabled>
+            <span id="count-B" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold ml-2">0/5</span>
+        </div>
+
+        <div id="list-B" class="space-y-2 flex-1"></div>
+        </div>
+    </div>
+
+        <div id="panel-pitch" class="force-flex-desktop flex-1 relative flex-col items-center justify-center bg-[#050505] w-full h-full p-2 z-10">
+            <div class="stadium-container">
+                <div class="pitch" id="pitchArea">
+                    <div class="line center-circle"></div> <div class="line center-line"></div> <div class="line box-top"></div> <div class="line box-bottom"></div>
+                    <div id="field-players"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-chat" class="mobile-hidden force-flex-desktop w-full md:w-96 hud-panel border-l border-white/5 flex-col h-full bg-[#050505] z-20">
+            <div class="h-14 border-b border-white/5 flex items-center px-5 bg-black/40 shrink-0">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2 shadow-[0_0_10px_#22c55e]"></span>
+                <h3 class="font-orbitron font-bold text-xs text-white uppercase tracking-widest">Live Chat</h3>
+            </div>
+            
+            <div id="chat-box" class="flex-1 overflow-y-auto p-5 custom-scroll"></div>
+            
+            <form onsubmit="sendChat(event)" id="chat-input-area" class="p-4 bg-black/60 border-t border-white/5 flex gap-3 items-center shrink-0">
+                <div class="relative flex-1">
+                    <input type="text" id="chatInput" class="w-full bg-[#151515] border border-white/10 text-white pl-4 pr-10 py-3 rounded-lg text-sm focus:border-neon focus:bg-black outline-none font-rajdhani font-medium transition-all" placeholder="Message..." autocomplete="off">
+                    <button type="button" class="absolute right-3 top-2.5 text-lg hover:scale-110 transition" onclick="addEmoji('🔥')">🔥</button>
+                </div>
+                <button type="submit" class="bg-neon text-black w-10 h-10 rounded-lg flex items-center justify-center font-bold hover:shadow-neon transition">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="md:hidden flex shrink-0 border-t border-white/10 z-40 bg-black">
+        <button onclick="switchTab('pitch')" id="tab-pitch" class="mobile-tab-btn active">TERRAIN</button>
+        <button onclick="switchTab('squads')" id="tab-squads" class="mobile-tab-btn">EQUIPES</button>
+        <button onclick="switchTab('chat')" id="tab-chat" class="mobile-tab-btn">CHAT</button>
+    </div>
+
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden" onclick="toggleMobileMenu()"></div>
+    <div id="mobile-menu" class="md:hidden fixed bottom-0 left-0 right-0 bg-[#111] rounded-t-2xl border-t border-white/10 p-6 z-[70] pb-10 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-orbitron font-bold text-white text-lg">MENU LOBBY</h3>
+            <button onclick="toggleMobileMenu()" class="text-gray-500 p-2">✕</button>
+        </div>
+        
+        <div class="bg-white/5 p-4 rounded-xl flex justify-between items-center mb-4 border border-white/5" onclick="copyCode()">
+            <div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">Code Lobby</div>
+                <div class="font-orbitron text-neon text-xl font-bold" id="match-code-mob">...</div>
+            </div>
+            <div class="text-[10px] border border-white/20 px-2 py-1 rounded text-gray-400">COPIER</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="openInviteModal(); toggleMobileMenu()" class="bg-white/10 text-white py-4 rounded-xl font-bold uppercase text-xs hover:bg-white/20">Inviter Ami</button>
+            <button onclick="leaveMatch()" class="bg-red-500/10 text-red-500 border border-red-500/20 py-4 rounded-xl font-bold uppercase text-xs">Quitter</button>
+        </div>
+        
+        <button id="btn-public-mob" onclick="togglePublic(); toggleMobileMenu()" class="hidden w-full mt-3 border border-dashed border-white/20 text-gray-400 py-3 rounded-xl text-xs font-bold uppercase">🌐 Rendre Public</button>
+    </div>
+
+    <div id="inviteModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-[#111] border border-white/10 p-6 rounded-2xl w-full max-w-sm relative shadow-2xl">
+            <button onclick="document.getElementById('inviteModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
+            <h3 class="font-orbitron font-bold text-lg text-white mb-4">INVITER</h3>
+            
+            <div class="mb-6">
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">PARTAGER LE LIEN DU MATCH</p>
+                <div class="flex gap-2">
+                    <input type="text" id="share-link-input" class="flex-1 bg-black/50 border border-white/20 rounded px-3 py-2 text-xs text-white outline-none" readonly>
+                    <button onclick="copyShareLink()" class="bg-white text-black font-bold text-xs px-4 py-2 rounded hover:bg-neon transition">COPIER</button>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">INVITER DEPUIS LA LISTE</p>
+            <div id="friends-list-modal" class="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scroll bg-black/30 p-2 rounded">
+                <p class="text-xs text-gray-500 text-center py-4">Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/match.js"></script> 
+</body>
+</html>

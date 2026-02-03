@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealFive | Amis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 
+    neon: '#EF1A2D', // Vrai rouge sportif (Scuderia Ferrari)
+    anthracite: '#1F2937', // Gris anthracite pur
+    black: '#080808', 
+    sidebar: '#0C0C0C' 
+}, fontFamily: { orbitron: ['Orbitron'], inter: ['Inter'] } } } }
+    </script>
+    <link rel="stylesheet" href="/css/friends.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="font-inter h-screen flex">
+
+     <aside class="w-64 bg-sidebar flex flex-col border-r border-white/5 hidden md:flex z-20">
+       <div class="h-20 flex items-center px-6 border-b border-white/5">
+        <img src="image/logo.png" alt="RealFive Logo" class="h-12 w-auto object-contain">
+    </div>
+        <nav class="flex-1 py-8 space-y-2">
+            <a href="/dashboard-joueur.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Tableau de bord</a>
+            <a href="/reservation.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Réserver</a>
+            <a href="/stats.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">
+            Statistiques</a>
+            <a href="/friends.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Amis</a>
+            <a href="/profile.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Profil</a>
+        </nav>
+        <div class="p-6 border-t border-white/5">
+            <div class="font-bold text-white text-xs truncate" id="user-name">...</div>
+            <button onclick="logout()" class="text-[10px] text-gray-500 hover:text-red-500 mt-2 uppercase font-bold">Déconnexion</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-0 overflow-y-auto relative bg-[#050505]">
+        
+        <div class="relative w-full h-[300px] md:h-[350px]">
+            <img src="image/camaraderie.jpg" alt="Ambiance RealFive" class="w-full h-full object-cover object-top">
+            
+            <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-[#050505]/50 to-[#050505]"></div>
+            
+            <div class="absolute bottom-0 w-full px-8 pb-8">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="font-orbitron text-4xl md:text-5xl font-black mb-2 drop-shadow-xl text-white">
+                        SOCIAL <span class="text-neon">HUB</span>
+                    </h1>
+                    <p class="text-gray-300 text-sm md:text-base font-medium drop-shadow-md max-w-lg">
+                        Gère ton équipe, ajoute tes potes et organise tes prochains matchs.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-8 pb-12 pt-4">
+
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 mb-12 shadow-lg shadow-neon/5 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-neon/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-neon/10 transition duration-700"></div>
+
+                <div class="relative z-10">
+                    <h3 class="font-orbitron font-bold text-white mb-4 text-lg">AJOUTER UN COÉQUIPIER</h3>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <input type="text" id="friendCodeInput" placeholder="ID UNIQUE (EX: #RF-9382)" class="flex-1 bg-black/50 border border-white/20 rounded-lg px-6 py-4 text-white outline-none focus:border-neon focus:ring-1 focus:ring-neon/50 font-orbitron uppercase tracking-widest transition placeholder-gray-600">
+                        <button onclick="addFriendByCode()" class="bg-neon text-black font-black px-8 py-4 rounded-lg uppercase hover:bg-white hover:scale-105 transition shadow-lg shadow-neon/20">
+                            Ajouter
+                        </button>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 text-xs text-gray-500">
+                        <span>Ton ID Unique :</span>
+                        <span id="my-code" class="text-white bg-white/10 px-2 py-1 rounded font-mono font-bold cursor-pointer hover:bg-neon hover:text-black transition select-all" onclick="copyMyCode()" title="Cliquer pour copier">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 mb-12 relative overflow-hidden group flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#25D366]/10 to-transparent opacity-50 group-hover:opacity-100 transition duration-500"></div>
+                
+                <div class="relative z-10 flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-full bg-[#25D366]/20 flex items-center justify-center border border-[#25D366]/30 group-hover:scale-110 transition">
+                        <svg class="w-7 h-7 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-orbitron font-bold text-white text-lg leading-tight">COMMUNAUTÉ WHATSAPP</h3>
+                        <p class="text-gray-400 text-xs md:text-sm mt-1 max-w-md">Rejoins le groupe officiel pour trouver des joueurs manquants et organiser tes matchs plus vite !</p>
+                    </div>
+                </div>
+
+                <a href="#" target="_blank" class="relative z-10 bg-[#25D366] text-black font-black px-6 py-3 rounded-lg uppercase hover:bg-white hover:scale-105 transition shadow-lg shadow-[#25D366]/20 flex items-center gap-2 whitespace-nowrap">
+                    REJOINDRE
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </a>
+            </div>
+          
+
+            <!-- SECTION DEMANDES D'AMIS -->
+
+
+            <div id="friend-requests-section" class="mb-8 hidden">
+    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+        <h3 class="font-orbitron text-md font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            Demandes d'amis
+        </h3>
+        <span class="text-xs text-gray-500" id="friend-requests-count">(0)</span>
+    </div>
+    <div id="friend-requests-grid" class="space-y-3"></div>
+</div>
+
+<div id="friendProfileModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-[#111] border border-white/10 p-6 rounded-2xl w-full max-w-md relative shadow-2xl animate-fade-in">
+        <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
+        
+        <div class="flex items-center gap-4 mb-6">
+            <img id="fp-avatar" src="" class="w-16 h-16 rounded-full border-2 border-neon object-cover">
+            <div>
+                <h3 id="fp-name" class="font-orbitron font-bold text-xl text-white">...</h3>
+                <div class="flex gap-2 text-xs">
+                    <span id="fp-position" class="bg-white/10 px-2 py-0.5 rounded text-gray-300">...</span>
+                    <span id="fp-number" class="bg-white/10 px-2 py-0.5 rounded text-gray-300">#..</span>
+                </div>
+            </div>
+            <div class="ml-auto text-right">
+                <div class="text-[10px] text-gray-500 uppercase font-bold">NOTE GEN.</div>
+                <div id="fp-rating" class="font-orbitron text-3xl font-black text-neon">0.0</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-black/40 p-3 rounded border border-white/5 text-center">
+                <div class="text-[9px] text-gray-500 uppercase">Matchs</div>
+                <div id="fp-matches" class="font-bold text-white text-lg">0</div>
+            </div>
+            <div class="bg-black/40 p-3 rounded border border-white/5 text-center">
+                <div class="text-[9px] text-gray-500 uppercase">Buts</div>
+                <div id="fp-goals" class="font-bold text-white text-lg">0</div>
+            </div>
+        </div>
+
+        <div class="relative w-full h-48">
+            <canvas id="friendRadarChart"></canvas>
+        </div>
+    </div>
+</div>
+
+            <!-- SECTION INVITATIONS MATCH -->
+           <div id="match-invitations-section" class="mb-8 hidden">
+                 <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+               <h3 class="font-orbitron text-md font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
+                Invitations Match
+               </h3>
+            <span class="text-xs text-gray-500" id="invitations-count">(0)</span>
+           </div>
+            <div id="match-invitations-grid" class="space-y-3"></div>
+            </div>
+
+            <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+                <h3 class="font-orbitron text-lg font-bold text-white uppercase tracking-wider">Ma Liste <span class="text-gray-600 text-sm ml-2 font-inter normal-case" id="friend-count">(0)</span></h3>
+            </div>
+
+            <div id="friends-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-full py-12 text-center text-gray-600 italic">Chargement de la liste...</div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="/js/friends.js"></script>
+    <script src="/js/mobile-navbar.js"></script>
+</body>
+</html>

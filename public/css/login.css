@@ -1,0 +1,50 @@
+:root {
+            --primary-red: #C41E3A;
+            --dark-blue: #1B3A52;
+            --accent-blue: #2A5475;
+        }
+        
+        body { background-color: #050505; color: white; overflow: hidden; }
+        
+        /* TEXTURE & AMBIANCE */
+        .noise-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .ambient-glow {
+            position: absolute; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 50% -20%, rgba(196, 30, 58, 0.15) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+
+        /* INPUTS PRO */
+        .input-field {
+            background: #111; border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 15px; width: 100%; border-radius: 6px;
+            font-family: 'Inter', sans-serif; transition: 0.3s;
+        }
+        .input-field:focus {
+            border-color: var(--primary-red); outline: none; box-shadow: 0 0 15px rgba(196,30,58,0.2);
+        }
+
+        /* BOUTON ACTION */
+        .btn-action {
+            width: 100%; padding: 15px; border-radius: 6px;
+            background: var(--primary-red); color: white; font-family: 'Orbitron', sans-serif;
+            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s; cursor: pointer; border: none;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px); box-shadow: 0 5px 20px rgba(196,30,58,0.4);
+            background: #D42847;
+        }
+
+        /* SOCIAL BUTTONS */
+        .social-btn {
+            background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; padding: 12px; border-radius: 6px; cursor: pointer; transition: 0.3s;
+        }
+        .social-btn:hover {
+            background: #252525; border-color: var(--accent-blue);
+        }

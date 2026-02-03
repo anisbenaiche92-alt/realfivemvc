@@ -1,0 +1,643 @@
+/* ===================================
+   REALFIVE DASHBOARD ULTIMATE V3
+   Charte: Rouge #C41E3A + Gris Anthracite
+   =================================== */
+
+:root {
+    --primary-red: #C41E3A;
+    --dark-blue: #1B3A52;
+    --accent-blue: #2A5475;
+    --dark: #050505;
+    --panel: #0F0F0F;
+    --border: rgba(255, 255, 255, 0.08);
+    --glow-red: rgba(196, 30, 58, 0.3);
+}
+
+body {
+    background-color: var(--dark);
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+/* === SCROLLBAR PREMIUM === */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; transition: background 0.2s; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary-red); }
+
+/* === NAVIGATION ITEMS === */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #6b7280;
+    border-radius: 0.75rem;
+    transition: all 300ms;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    border: none;
+}
+
+.nav-item:hover, .nav-item.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active .icon-box {
+    color: var(--primary-red);
+    filter: drop-shadow(0 0 15px var(--glow-red));
+}
+
+.nav-item .active-indicator {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.25rem;
+    height: 2rem;
+    background-color: var(--primary-red);
+    border-top-right-radius: 9999px;
+    border-bottom-right-radius: 9999px;
+    box-shadow: 0 0 10px var(--primary-red);
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+.nav-item.active .active-indicator {
+    opacity: 1;
+}
+
+/* === GLASS CARD === */
+.glass-card {
+    background-color: #0F0F0F;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(12px);
+    position: relative;
+}
+
+/* === INPUT FIELDS === */
+.input-field {
+    width: 100%;
+    background-color: black;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: white;
+    outline: none;
+    transition: all 300ms;
+    font-weight: 500;
+}
+
+.input-field:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 1px var(--primary-red), 0 0 15px var(--glow-red);
+}
+
+.input-field::placeholder {
+    color: #555;
+}
+
+/* === LABELS === */
+.section-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+/* === BUTTONS === */
+.btn-primary {
+    background-color: var(--primary-red);
+    color: white;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.1em;
+    transition: all 300ms;
+    width: 100%;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #D42847;
+    transform: scale(1.02);
+    box-shadow: 0 5px 20px var(--glow-red);
+}
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    letter-spacing: 0.1em;
+    transition: all 300ms;
+    width: 100%;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-icon {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #999;
+}
+
+.btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: var(--primary-red);
+}
+
+/* === FULLCALENDAR - DARK PRO MODE === */
+.fc {
+    --fc-border-color: rgba(255, 255, 255, 0.1) !important;
+    --fc-today-bg-color: rgba(239, 26, 45, 0.05) !important;
+    background: #0A0A0A !important; /* Fond sombre profond */
+    color: #ffffff !important;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Grille de fond - Rendre les lignes visibles */
+.fc-timegrid-slots td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.fc-timegrid-slot-minor {
+    border-top-style: dotted !important;
+    border-top-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Heures sur le côté */
+.fc-timegrid-slot-label-cushion {
+    color: #9CA3AF !important;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px !important;
+    text-transform: uppercase;
+}
+
+/* En-tête des jours */
+.fc-col-header-cell {
+    background: #111 !important;
+    padding: 12px 0 !important;
+}
+
+.fc-col-header-cell-cushion {
+    color: #efefef !important;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px !important;
+    letter-spacing: 1px;
+}
+
+/* Correction Fullscreen */
+.calendar-fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    background: #050505 !important;
+    padding: 20px !important;
+}
+/* === GESTION DU CÔTE-À-CÔTE (NON SUPERPOSÉ) === */
+.fc-timegrid-event-harness {
+    margin: 0 1px !important; /* Petit espace pour séparer les terrains */
+}
+
+/* Look des réservations */
+.fc-event {
+    border: none !important;
+    border-radius: 6px !important;
+    border-left: 4px solid rgba(0,0,0,0.2) !important;
+    padding: 4px 6px !important; /* Un peu moins de padding pour laisser place au texte */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.2s, z-index 0.2s !important;
+    overflow: hidden !important; /* EMPÊCHE LE TEXTE DE SORTIR */
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    z-index: 50 !important;
+}
+
+/* VERT : Confirmé */
+.fc-event-confirmed {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important; /* Vert émeraude pro */
+    border-left-color: #19af73 !important; /* Bordure vert clair */
+    color: white !important;
+}
+
+/* ORANGE : En attente */
+.fc-event-pending {
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 100%) !important; /* Orange vif */
+    border-left-color: #FDBA74 !important;
+    color: white !important;
+}
+
+/* ROUGE : Annulé */
+.fc-event-cancelled {
+    background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important; /* Rouge alerte */
+    border-left-color: #FCA5A5 !important;
+    color: white !important;
+    opacity: 0.8;
+}
+
+/* Indicateur heure actuelle */
+.fc-timegrid-now-indicator-line {
+    border-color: #EF1A2D !important;
+    border-width: 2px !important;
+}
+
+.fc-timegrid-now-indicator-arrow {
+    border-color: var(--primary-red);
+    border-width: 10px;
+    filter: drop-shadow(0 0 8px var(--glow-red));
+}
+
+/* === ÉVÉNEMENTS CÔTE-À-CÔTE (PAS SUPERPOSÉS) === */
+.fc-timegrid-event-harness {
+    z-index: 1 !important;
+    margin-right: 2px !important; /* Espace entre événements */
+}
+
+.fc-timegrid-event-harness:hover {
+    z-index: 100 !important;
+}
+
+/* Événements avec meilleure visibilité */
+
+
+/* Hover événement */
+.fc-event:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.8),
+        0 6px 12px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    z-index: 150 !important;
+}
+
+/* Titre événement */
+.fc-event-title {
+    font-weight: 800 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    display: block !important;
+    line-height: 1.3 !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Heure événement */
+.fc-event-time {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    opacity: 1;
+    display: block !important;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+
+/* Animation apparition */
+@keyframes eventAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.fc-event.fc-event-new {
+    animation: eventAppear 0.3s ease-out;
+}
+
+/* Toolbar calendrier */
+.fc-toolbar {
+    padding: 20px !important;
+    background: #0a0a0a;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0 !important;
+}
+
+.fc-toolbar-title {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Boutons navigation */
+.fc-button {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 11px !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s;
+}
+
+.fc-button:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--primary-red) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.fc-button-active {
+    background: var(--primary-red) !important;
+    color: white !important;
+    border-color: var(--primary-red) !important;
+    box-shadow: 0 0 20px var(--glow-red);
+}
+
+.fc-button:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+/* Scrollbar calendrier */
+.fc-scroller {
+    overflow-y: auto !important;
+}
+
+.fc-scroller::-webkit-scrollbar {
+    width: 10px;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-red);
+}
+
+/* Gestion événements qui se chevauchent */
+.fc-timegrid-col-events {
+    margin: 0 3px !important;
+}
+
+.fc-timegrid-event {
+    margin-bottom: 3px !important;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* === CALENDAR VIEW BUTTONS === */
+.cal-view-btn {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #888;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.cal-view-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.cal-view-btn.active {
+    background: var(--primary-red);
+    color: white;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 20px var(--glow-red);
+    transform: translateY(-2px);
+}
+
+/* === STATUS FILTER BUTTONS === */
+.status-filter-btn {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #888;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.status-filter-btn.active {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.status-filter-btn.active[data-status="CONFIRMED"] {
+    border-color: var(--accent-blue);
+    background: rgba(42, 84, 117, 0.2);
+    color: var(--accent-blue);
+}
+
+.status-filter-btn.active[data-status="PENDING"] {
+    border-color: #F59E0B;
+    background: rgba(245, 158, 11, 0.2);
+    color: #FBBF24;
+}
+
+.status-filter-btn.active[data-status="CANCELLED"] {
+    border-color: #6B7280;
+    background: rgba(107, 114, 128, 0.2);
+    color: #9CA3AF;
+}
+
+/* === CALENDAR FULLSCREEN === */
+.calendar-fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999 !important;
+    background-color: #050505;
+    padding: 20px;
+    height: 100vh !important;
+    width: 100vw !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-fullscreen #calendar {
+    flex: 1;
+    height: 100% !important;
+}
+
+/* === SANCTIONS SYSTÈME === */
+.sanction-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sanction-badge.active {
+    background: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sanction-badge.expired {
+    background: rgba(107, 114, 128, 0.2);
+    color: #9CA3AF;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+/* === TABLE STYLES === */
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.data-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-table tbody tr {
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+.data-table tbody td {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-table tbody tr td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px 0 0 8px;
+}
+
+.data-table tbody tr td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .fc-timegrid-slot {
+        height: 45px !important;
+    }
+    
+    .fc-event {
+        font-size: 10px !important;
+        padding: 6px 8px !important;
+        min-height: 40px;
+    }
+}
+
+
+/* Style pour le mode plein écran */
+#calendar-wrapper.calendar-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: var(--dark);
+    padding: 20px;
+}

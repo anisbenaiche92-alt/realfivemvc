@@ -1,0 +1,43 @@
+:root {
+    --primary-red: #C41E3A;
+    --dark-blue: #1B3A52;
+    --accent-blue: #2A5475;
+}
+
+/* === SYSTEME NOTIFICATIONS & MODALES (GLOBAL) === */
+#toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast-item {
+    background: #111; border: 1px solid rgba(255, 255, 255, 0.1); border-left-width: 4px;
+    padding: 15px 20px; border-radius: 12px; min-width: 300px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+    display: flex; align-items: center; gap: 15px; color: white; font-family: 'Inter', sans-serif;
+    pointer-events: auto; animation: slideIn 0.3s forwards;
+}
+.toast-item.success { border-left-color: var(--accent-blue); }
+.toast-item.error { border-left-color: var(--primary-red); }
+.toast-item.success i { color: var(--accent-blue); } 
+.toast-item.error i { color: var(--primary-red); }
+.toast-content h4 { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; margin: 0 0 2px 0; }
+.toast-content p { font-size: 0.8rem; color: #aaa; margin: 0; }
+.toast-exit { animation: fadeOut 0.3s forwards; }
+
+#sys-confirm-overlay {
+    position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: 0.2s;
+}
+#sys-confirm-overlay.active { opacity: 1; pointer-events: auto; }
+.sys-confirm-box {
+    background: #0F0F0F; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 400px;
+    padding: 30px; border-radius: 16px; text-align: center; transform: scale(0.9); transition: 0.2s;
+}
+#sys-confirm-overlay.active .sys-confirm-box { transform: scale(1); }
+.sys-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; cursor: pointer; border: none; margin: 5px; }
+.sys-btn-no { background: rgba(255,255,255,0.05); color: white; }
+.sys-btn-yes { background: var(--primary-red); color: white; }
+
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { transform: translateX(100%); opacity: 0; } }

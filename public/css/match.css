@@ -1,0 +1,187 @@
+:root {
+            --primary-red: #C41E3A;
+            --dark-blue: #1B3A52;
+            --accent-blue: #2A5475;
+        }
+        
+        /* --- CORE LAYOUT --- */
+        body { background-color: #020202; color: white; overflow: hidden; height: 100dvh; width: 100vw; display: flex; flex-direction: column; }
+        
+        .noise-bg { position: fixed; inset: 0; z-index: -1; opacity: 0.05; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .spotlight { position: fixed; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(196, 30, 58, 0.08) 0%, transparent 70%); top: -30%; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 0; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+        /* UI ELEMENTS */
+        .hud-panel { background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-header { background: rgba(5, 5, 5, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- TERRAIN & PITCH --- */
+        .stadium-container { 
+            width: 100%; height: 100%; 
+            display: flex; align-items: center; justify-content: center; 
+            background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
+            padding: 10px; position: relative; overflow: hidden;
+        }
+        
+        .pitch { 
+            height: 96%; width: auto; aspect-ratio: 2/3;
+            background: repeating-linear-gradient(180deg, #121212, #121212 10%, #151515 10%, #151515 20%);
+            border: 2px solid rgba(255,255,255,0.2); border-radius: 6px;
+            position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        
+        /* LIGNES */
+        .line { position: absolute; border: 2px solid rgba(255,255,255,0.15); pointer-events: none; }
+        .center-circle { width: 20%; height: 13.33%; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .center-line { width: 100%; top: 50%; left: 0; border-top: 2px solid rgba(255,255,255,0.15); }
+        .box-top { width: 60%; height: 12%; top: 0; left: 20%; border-top: none; }
+        .box-bottom { width: 60%; height: 12%; bottom: 0; left: 20%; border-bottom: none; }
+
+        /* --- CARTES JOUEURS (RESPONSIVE) --- */
+        .player-card {
+            position: absolute; width: 65px; height: 90px; /* Taille PC */
+            background-image: url('/image/futcard.png'); background-size: contain; background-repeat: no-repeat; background-position: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            transform: translate(-50%, -50%); z-index: 10; cursor: pointer; transition: all 0.2s ease;
+        }
+        
+        /* MOBILE : Cartes réduites pour éviter superposition */
+        @media (max-width: 768px) {
+            .player-card { width: 44px; height: 64px; } 
+            .card-img { width: 24px !important; height: 24px !important; top: 22% !important; }
+        }
+
+        .player-card:hover { transform: translate(-50%, -50%) scale(1.1); z-index: 50; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
+        
+        /* Indicateurs d'équipe */
+        .player-card.team-A::after { content:''; position:absolute; bottom: -5px; left:50%; transform:translateX(-50%); width: 6px; height: 6px; border-radius: 50%; background: var(--dark-blue); box-shadow: 0 0 5px var(--dark-blue); }
+        .player-card.team-B::after { content:''; position:absolute; top: -5px; left:50%; transform:translateX(-50%); width: 6px; height: 6px; border-radius: 50%; background: var(--primary-red); box-shadow: 0 0 5px var(--primary-red); }
+
+        .card-img { position: absolute; top: 24%; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; border-radius: 50%; object-fit: cover; z-index: 2; }
+
+        /* --- LISTE JOUEURS --- */
+        .roster-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; margin-bottom: 6px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid transparent; position: relative; }
+        .roster-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+        .roster-actions { display: none; gap: 8px; }
+        .roster-item:hover .roster-actions { display: flex; }
+        
+        .btn-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-friend { color: var(--accent-blue); background: rgba(42,84,117,0.15); }
+        .btn-kick { color: var(--primary-red); background: rgba(196,30,58,0.15); }
+
+        /* --- CHAT OPTIMISÉ --- */
+        #chat-input-area { background: #000; border-top: 1px solid #222; padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        input[type="text"] { font-size: 16px; } 
+        .chat-msg { display: flex; gap: 10px; margin-bottom: 12px; animation: slideIn 0.2s ease; }
+        .chat-msg.me { flex-direction: row-reverse; }
+        .chat-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; background: #1a1a1a; color: #ddd; max-width: 80%; line-height: 1.4; }
+        .chat-msg.me .chat-bubble { background: var(--primary-red); color: white; font-weight: 600; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- TABS (MOBILE ONLY) --- */
+        .mobile-tab-btn { flex: 1; text-align: center; padding: 16px 0; font-family: 'Orbitron'; font-size: 11px; color: #555; border-top: 2px solid transparent; background: #050505; transition: 0.2s; cursor: pointer; }
+        .mobile-tab-btn.active { color: var(--primary-red); border-top-color: var(--primary-red); background: #0a0a0a; font-weight: bold; }
+        
+        /* MENU MOBILE */
+        #mobile-menu { transform: translateY(100%); transition: transform 0.3s ease-out; }
+        #mobile-menu.open { transform: translateY(0); }
+
+        /* --- LAYOUT HYBRIDE --- */
+        /* PC: Force l'affichage flex des colonnes */
+        @media (min-width: 768px) {
+            .force-flex-desktop { display: flex !important; }
+            .hide-desktop { display: none !important; }
+        }
+        /* Mobile: Utilise les classes de toggle JS */
+        @media (max-width: 767px) {
+            .mobile-hidden { display: none; }
+        }
+
+        /* --- TEXTE DANS LA CARTE FUT --- */
+.player-name {
+    position: absolute;
+    bottom: 12px; /* Ajustez selon votre image futcard.png */
+    width: 100%;
+    text-align: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: #333; /* Couleur sombre pour aller sur une carte dorée */
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    z-index: 5;
+}
+
+.player-rating {
+    position: absolute;
+    top: 12px; /* Ajustez selon votre image */
+    left: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    color: #333;
+    z-index: 5;
+}
+
+/* Ajustement responsive pour mobile */
+@media (max-width: 768px) {
+    .player-name { font-size: 7px; bottom: 8px; }
+    .player-rating { font-size: 8px; top: 8px; left: 6px; }
+}
+
+/* --- UI OPTIMIZATION & RESPONSIVE FIXES --- */
+
+/* Empêche le header de s'écraser */
+.glass-header {
+    min-height: 60px;
+    /* Assure que le header est toujours au-dessus mais ne bloque pas les clics sur les côtés si besoin */
+    pointer-events: none; 
+}
+.glass-header > * {
+    pointer-events: auto; /* Réactive les clics sur les enfants directs */
+}
+
+/* Force l'affichage monospaced pour les chiffres et codes */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: 0.1em;
+}
+
+/* Gestion parfaite du scroll */
+body {
+    overscroll-behavior: none; /* Empêche le rebond élastique sur Mac/iOS */
+}
+
+/* Ajustement du Pitch Container pour ne jamais déborder */
+.stadium-container {
+    padding: 10px;
+    max-width: 100vw;
+}
+
+@media (max-width: 768px) {
+    /* Sur mobile, on s'assure que le contenu ne passe pas sous le menu du bas */
+    .hud-panel {
+        padding-bottom: 70px; /* Espace pour les tabs */
+    }
+    
+    /* Le terrain doit prendre toute la largeur disponible */
+    .pitch {
+        width: 92%;
+        height: auto;
+        aspect-ratio: 2/3.2; /* Légèrement plus haut sur mobile */
+    }
+}
+
+@media (min-width: 769px) {
+    /* Desktop layout strict */
+    .force-flex-desktop { 
+        display: flex !important; 
+    }
+}

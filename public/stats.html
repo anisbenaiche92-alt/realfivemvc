@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Stats | RealFive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 
+    neon: '#EF1A2D', // Vrai rouge sportif (Scuderia Ferrari)
+    anthracite: '#1F2937', // Gris anthracite pur
+    black: '#080808', 
+    sidebar: '#0C0C0C' 
+}, fontFamily: { orbitron: ['Orbitron'], inter: ['Inter'] } } } }
+    </script>
+    <link rel="stylesheet" href="/css/stats.css">
+</head>
+<body class="font-inter h-screen flex">
+
+     <aside class="w-64 bg-sidebar flex flex-col border-r border-white/5 hidden md:flex z-20">
+       <div class="h-20 flex items-center px-6 border-b border-white/5">
+        <img src="image/logo.png" alt="RealFive Logo" class="h-12 w-auto object-contain">
+    </div>
+        <nav class="flex-1 py-8 space-y-2">
+            <a href="/dashboard-joueur.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Tableau de bord</a>
+            <a href="/reservation.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Réserver</a>
+            <a href="/stats.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">
+            Statistiques</a>
+            <a href="/friends.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Amis</a>
+            <a href="/profile.html" class="flex items-center gap-4 px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition">Profil</a>
+        </nav>
+        <div class="p-6 border-t border-white/5">
+            <div class="font-bold text-white text-xs truncate" id="user-name">...</div>
+            <button onclick="logout()" class="text-[10px] text-gray-500 hover:text-red-500 mt-2 uppercase font-bold">Déconnexion</button>
+        </div>
+    </aside>
+
+
+    <main class="flex-1 overflow-y-auto p-8">
+        <h1 class="font-orbitron text-3xl font-black mb-8">PERFORMANCE <span class="text-neon">CENTER</span></h1>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 text-center">
+                <div class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-2">MATCHS JOUÉS</div>
+                <div class="text-3xl font-orbitron font-bold text-white" id="stat-matches">0</div>
+            </div>
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 text-center">
+                <div class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-2">VICTOIRES</div>
+                <div class="text-3xl font-orbitron font-bold text-neon" id="stat-wins">0%</div>
+            </div>
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 text-center">
+                <div class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-2">BUTS</div>
+                <div class="text-3xl font-orbitron font-bold text-white" id="stat-goals">0</div>
+            </div>
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 text-center">
+                <div class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-2">NOTE MOY.</div>
+                <div class="text-3xl font-orbitron font-bold text-yellow-400" id="stat-rating">0.0</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 lg:col-span-1 flex flex-col items-center justify-center">
+                <h3 class="font-orbitron font-bold text-white mb-6">ANALYSE DU JOUEUR</h3>
+                <div class="w-full max-w-xs">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-[#111] p-6 rounded-xl border border-white/10 lg:col-span-2">
+                <h3 class="font-orbitron font-bold text-white mb-6">HISTORIQUE RÉCENT</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[10px] text-gray-500 uppercase border-b border-white/10">
+                                <th class="pb-3 pl-2">Résultat</th>
+                                <th class="pb-3">Date</th>
+                                <th class="pb-3">Score</th>
+                                <th class="pb-3 text-right pr-2">Ma Note</th>
+                            </tr>
+                        </thead>
+                        <tbody id="match-history" class="text-sm">
+                            <tr><td colspan="4" class="py-4 text-center text-gray-600 italic">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/stats.js"></script>
+    <script src="/js/mobile-navbar.js"></script>
+</body>
+</html>

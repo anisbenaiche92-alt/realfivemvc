@@ -1,0 +1,49 @@
+:root { 
+        --primary-red: #C41E3A; 
+        --dark-blue: #1B3A52;
+        --accent-blue: #2A5475;
+    }
+    body { background-color: #050505; color: white; }
+    .noise-bg {
+        position: fixed; inset: 0; z-index: -1; opacity: 0.03; pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+    
+    .date-card { background: #111; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; cursor: pointer; }
+    .date-card:hover { border-color: var(--primary-red); transform: translateY(-2px); }
+    .date-card.active {
+        background: rgba(196, 30, 58, 0.1); border-color: var(--primary-red); color: var(--primary-red);
+        box-shadow: 0 0 15px rgba(196, 30, 58, 0.2);
+    }
+
+    .duration-btn { background: #111; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; }
+    .duration-btn:hover { border-color: var(--primary-red); }
+    .duration-btn.active { background: var(--primary-red); color: white; font-weight: bold; border-color: var(--primary-red); }
+
+    .pitch-card { background: linear-gradient(180deg, #111 0%, #0a0a0a 100%); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+    .pitch-card:hover { border-color: rgba(255,255,255,0.2); }
+    .pitch-card.active { border-color: var(--primary-red); box-shadow: 0 0 20px rgba(196, 30, 58, 0.1); }
+    .payment-btn { background: #111; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; opacity: 0.6; }
+.payment-btn:hover { border-color: var(--primary-red); opacity: 1; }
+.payment-btn.active { 
+    background: rgba(196, 30, 58, 0.1); border-color: var(--primary-red); 
+    color: white; opacity: 1; box-shadow: 0 0 15px rgba(196, 30, 58, 0.1); 
+}
+    /* TIME SLOT STYLE CORRIGÉ */
+    .time-slot-btn { 
+        background: #111; border: 1px solid rgba(255,255,255,0.1); 
+        transition: all 0.2s; color: #aaa; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;
+    }
+    .time-slot-btn:hover:not(:disabled) { 
+        background: rgba(196, 30, 58, 0.1); color: var(--primary-red); border-color: var(--primary-red); 
+        transform: scale(1.05);
+    }
+    .time-slot-btn.selected { 
+        background: var(--primary-red); color: white; font-weight: 900; 
+        box-shadow: 0 0 15px rgba(196, 30, 58, 0.5); border-color: var(--primary-red);
+    }
+    .time-slot-btn:disabled {
+        background: #1a0505; color: #661111; border-color: #330a0a; cursor: not-allowed; text-decoration: line-through; opacity: 0.7;
+    }
+
+    #booking-bar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }

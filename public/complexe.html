@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Complexe - RealFive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#EF1A2D', anthracite: '#1F2937', black: '#080808' },
+                    fontFamily: { orbitron: ['Orbitron', 'sans-serif'], inter: ['Inter', 'sans-serif'] },
+                    animation: { 'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .neon-text { text-shadow: 0 0 10px rgba(239, 26, 45, 0.5); }
+    </style>
+</head>
+<body class="bg-black font-inter text-white selection:bg-neon selection:text-black">
+
+    <header class="w-full max-w-[1400px] mx-auto px-8 py-8 flex justify-between items-center z-50">
+        <a href="index.html" class="flex items-center gap-4 group">
+            <img src="image/logo.png" alt="Logo" class="h-12 w-auto">
+        </a>
+            <nav class="hidden md:flex gap-12">
+    <a href="complexe.html" class="...">Complexe</a>
+    <a href="tarifs.html" class="...">Tarifs</a>
+    <a href="events.html" class="...">Événements</a>
+    <a href="login.html" class="...">Réservation</a>
+</nav>
+        <a href="login.html" class="font-orbitron text-xs font-bold border border-white/30 px-6 py-2 rounded hover:bg-neon hover:border-neon transition uppercase">Connexion</a>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-8 py-12">
+        
+        <section class="mb-24 text-center">
+            <h1 class="font-orbitron text-5xl md:text-6xl font-black mb-6 neon-text">LE VRAI FUTSAL</h1>
+            <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                Intensité. Technique. Engagement. <br>
+                Au RealFive, retrouvez des sensations authentiques : un jeu rapide et des prises de décisions instantanées.
+            </p>
+        </section>
+
+        <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
+            <div class="relative">
+                <div class="absolute -inset-4 bg-neon/20 blur-3xl rounded-full"></div>
+                <div class="glass-panel h-80 w-full rounded-xl flex items-center justify-center relative z-10 overflow-hidden group">
+                     <img 
+            src="image/reservation.png" 
+            alt="Terrain Indoor RealFive" 
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        >
+                </div>
+            </div>
+            <div>
+                <h2 class="font-orbitron text-3xl font-bold mb-4 text-white">TERRAINS <span class="text-neon">PRO</span></h2>
+                <p class="text-gray-400 mb-6">
+                    Deux grands terrains indoor entourés de palissades pour un jeu fluide sans interruption.
+                    Surface synthétique dernière génération sur sous-couche amortissante pour protéger vos articulations.
+                </p>
+                <ul class="space-y-2 text-sm font-bold text-gray-300">
+                    <li class="flex items-center gap-2"><span class="text-neon">✓</span> Jeu continu & rythmé</li>
+                    <li class="flex items-center gap-2"><span class="text-neon">✓</span> Isolation thermique optimale</li>
+                    <li class="flex items-center gap-2"><span class="text-neon">✓</span> Vestiaires tout confort</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
+            <div class="order-2 md:order-1">
+                <h2 class="font-orbitron text-3xl font-bold mb-4 text-white">LA 3ÈME <span class="text-neon">MI-TEMPS</span></h2>
+                <p class="text-gray-400 mb-6">
+                    Après l'effort, le réconfort au Club House. Bar, pizzas et écrans géants diffusant les grands matchs.
+                    Un espace convivial pour débriefer, chambrer et partager un moment entre amis.
+                </p>
+            </div>
+            <div class="order-1 md:order-2 relative">
+                <div class="glass-panel h-80 w-full rounded-xl flex items-center justify-center overflow-hidden">
+                      <img 
+            src="image/repos.png" 
+            alt="Club House RealFive" 
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        >
+                </div>
+            </div>
+        </div>
+
+        <section class="glass-panel p-10 rounded-2xl relative overflow-hidden text-center">
+            <div class="absolute top-0 left-0 w-full h-1 bg-neon shadow-[0_0_20px_#EF1A2D]"></div>
+            <h2 class="font-orbitron text-4xl font-black mb-8">TECHNOLOGIE VIDÉO <span class="text-neon animate-pulse">LIVE</span></h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-4">
+                    <div class="text-4xl mb-2">🎥</div>
+                    <h3 class="font-bold text-white mb-2">REVOYEZ</h3>
+                    <p class="text-xs text-gray-400">Accédez au replay intégral de votre match dès le coup de sifflet final.</p>
+                </div>
+                <div class="p-4 border-l border-r border-white/10">
+                    <div class="text-4xl mb-2">✂️</div>
+                    <h3 class="font-bold text-white mb-2">CLIPPEZ</h3>
+                    <p class="text-xs text-gray-400">Isolez vos plus beaux buts et gestes techniques pour les partager.</p>
+                </div>
+                <div class="p-4">
+                    <div class="text-4xl mb-2">🏆</div>
+                    <h3 class="font-bold text-white mb-2">VOTEZ</h3>
+                    <p class="text-xs text-gray-400">Élisez l'Homme du match, le Meilleur But et le Farceur de la session.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-white/10 py-8 text-center text-gray-500 text-xs">
+        <p>&copy; 2026 REALFIVE - Le Vrai Futsal.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chargement...</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        // CONFIGURATION TAILWIND (Identique à la tienne)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { 
+    neon: '#EF1A2D', // Vrai rouge sportif (Scuderia Ferrari)
+    anthracite: '#1F2937', // Gris anthracite pur
+    black: '#080808', 
+    sidebar: '#0C0C0C' 
+},
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    letterSpacing: {
+                        ultra: '0.25em',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 7s ease-in-out 2s infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/css/intro.css">
+</head>
+<body class="font-inter min-h-screen flex flex-col relative selection:bg-neon selection:text-black">
+
+    <div id="intro-screen">
+        <video id="intro-video" muted playsinline preload="auto">
+            <source src="video/intro4.mp4" type="video/mp4">
+        </video>
+        <div class="flash-overlay"></div>
+    </div>
+
+    <div id="main-site" style="display:none; opacity:0;">
+        <div class="noise-overlay"></div>
+        <div class="ambient-glow animate-pulse-slow"></div>
+
+        <header class="w-full max-w-[1400px] mx-auto px-8 py-8 flex justify-between items-center z-50 relative">
+            <div class="flex items-center gap-4 group cursor-pointer">
+                <img id="app-logo" src="image/logo.png" alt="Logo" class="h-14 w-auto object-contain drop-shadow-lg transition transform group-hover:scale-105 duration-500">
+            </div>
+
+           <nav class="hidden md:flex gap-12">
+    <a href="complexe.html" class="...">Complexe</a>
+    <a href="tarifs.html" class="...">Tarifs</a>
+    <a href="events.html" class="...">Événements</a>
+    <a href="login.html" class="...">Réservation</a>
+</nav>
+
+            <a href="/login.html" class="font-orbitron text-xs font-bold text-white border border-white/30 px-8 py-3 rounded hover:bg-white hover:text-black hover:border-white transition-all duration-300 uppercase tracking-widest">
+                Connexion
+            </a>
+        </header>
+
+        <main class="flex-grow flex flex-col lg:flex-row items-center justify-center max-w-[1400px] mx-auto px-8 relative w-full z-10 pb-10">
+            
+            <div class="w-full lg:w-1/2 flex flex-col items-start lg:pr-12 pt-10 lg:pt-0">
+                
+                <div class="flex items-center gap-3 mb-8">
+                    <div id="opening-date" class="px-3 py-1 bg-neon/10 border border-neon/30 rounded text-[10px] font-bold tracking-ultra uppercase text-neon font-orbitron animate-pulse">
+                        Ouverture --
+                    </div>
+                    <span id="full-address" class="text-[10px] font-bold tracking-widest uppercase text-gray-500">--</span>
+                </div>
+
+                <h1 class="font-orbitron text-5xl md:text-7xl font-black leading-[0.95] mb-6 text-white">
+                    <span id="hero-title-1">LE FOOT À 5</span> <br>
+                    <span id="hero-title-2" class="text-neon drop-shadow-[0_0_15px_rgba(77,255,153,0.3)]">NOUVELLE GÉNÉRATION</span>
+                </h1>
+
+                <p class="text-gray-400 text-base md:text-lg leading-relaxed max-w-lg mb-10 border-l-2 border-neon/50 pl-6">
+                    Découvrez le nouveau complexe <strong id="complex-name-bold">RealFive</strong>. <br>
+                    <span id="complex-desc">Surface synthétique dernière génération pour une fluidité de jeu absolue.</span>
+                    <span id="complex-slogan" class="text-white block mt-2 font-bold italic">"Five pour tous."</span>
+                </p>
+
+                <div class="flex flex-wrap gap-5 mb-16">
+                    <button class="btn-pro bg-neon text-black font-orbitron font-black text-sm px-10 py-5 rounded-sm uppercase tracking-wider" onclick="window.location.href='/login.html'">
+                        Réserver un terrain
+                    </button>
+                    <button class="btn-pro bg-transparent border border-white/20 text-white font-orbitron font-bold text-sm px-10 py-5 rounded-sm uppercase tracking-wider hover:bg-white/5 "onclick="window.location.href='/complexe.html'">
+                        Infos Complexe
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="w-full lg:w-1/2 relative h-[600px] lg:h-[700px] flex items-center justify-end container-players pointer-events-none mt-10 lg:mt-0">
+                <div class="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-neon rounded-full blur-[140px] opacity-15 z-0 animate-pulse-slow"></div>
+                <img src="image/imagenb3.png" alt="Team" class="absolute top-20 right-0 w-[380px] lg:w-[420px] opacity-20 grayscale brightness-50 z-10 animate-float-delayed duration-[8s] drop-shadow-2xl">
+                <img src="image/imagenb2.png" alt="Action" class="absolute top-10 right-[150px] lg:right-[180px] w-[220px] lg:w-[240px] opacity-60 grayscale z-20 animate-float-delayed drop-shadow-2xl">
+                <img src="image/imagenb.png" alt="Striker" class="absolute top-[60px] right-[40px] lg:right-[60px] w-[350px] lg:w-[440px] z-30 grayscale brightness-110 animate-float drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+            </div>
+
+        </main>
+    </div>
+
+    <div id="promo-toast" class="fixed bottom-10 right-10 z-50 transform translate-y-20 opacity-0 hidden">
+        <div class="relative bg-[#050505]/90 backdrop-blur-xl border border-[#EF1A2D]/50 p-6 rounded-2xl shadow-[0_0_40px_rgba(239,26,45,0.2)] w-[380px] overflow-hidden group">
+            
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#EF1A2D] blur-[60px] opacity-20 group-hover:opacity-30 transition duration-700"></div>
+
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-orbitron font-black text-white text-lg italic tracking-wide">OFFRE D'OUVERTURE <span class="text-2xl">🚀</span></h3>
+                        <p class="text-gray-400 text-xs mt-1 font-inter">Tarif exclusif lancement</p>
+                    </div>
+                    <button onclick="closeToast()" class="text-gray-500 hover:text-white transition transform hover:rotate-90">✕</button>
+                </div>
+                
+                <div class="flex items-baseline gap-2 mb-4">
+                    <span class="text-3xl font-orbitron font-black text-[#EF1A2D] drop-shadow-[0_0_10px_rgba(239,26,45,0.5)]">5€</span>
+                    <span class="text-sm text-gray-300 font-bold uppercase">/ Heure / Pers.</span>
+                </div>
+
+                <div class="flex items-center gap-0 bg-white/5 border border-white/10 rounded-lg overflow-hidden p-1 relative group-hover:border-[#EF1A2D]/50 transition duration-300">
+                    <div class="flex-1 text-center font-mono font-bold text-xl tracking-widest text-white select-all" id="code-text">BIENVENUE</div>
+                    <button onclick="copyCode()" id="btn-copy" class="bg-[#EF1A2D] hover:bg-white hover:text-black text-black font-black uppercase text-xs px-6 py-3 rounded transition-all duration-300 shadow-[0_0_15px_rgba(239,26,45,0.4)]">
+                        COPIER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <script src="/js/intro.js"></script>
+
+</body>
+</html>
