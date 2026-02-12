@@ -6,6 +6,9 @@ const db = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME, // <--- C'est ici qu'il choisit la base
+    ssl: {
+    rejectUnauthorized: false
+  }
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -20,5 +23,6 @@ db.getConnection()
     .catch(err => {
         console.error("❌ Erreur de connexion BDD :", err);
     });
+
 
 module.exports = db;
