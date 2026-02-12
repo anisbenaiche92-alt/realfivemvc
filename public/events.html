@@ -2,104 +2,451 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Événements & Contact - RealFive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Événements & Contact | RealFive - Le Vrai Futsal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { neon: '#EF1A2D', anthracite: '#1F2937', black: '#080808' },
-                    fontFamily: { orbitron: ['Orbitron', 'sans-serif'], inter: ['Inter', 'sans-serif'] }
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+ <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { 
+                    neon: '#941B20',       // Ton rouge logo exact
+                    anthracite: '#121214', // FOND : Anthracite profond (Remplace le noir pur)
+                    cardGrey: '#1E1E22',   // CARTES : Gris visible pour le relief
+                    black: '#0A0A0A',
+                    gold: '#D4AF37',
+                    silverGray: '#C0C0C8'
+                },
+                fontFamily: { 
+                    orbitron: ['Orbitron', 'sans-serif'], 
+                    syne: ['Syne', 'sans-serif'] 
                 }
             }
         }
-    </script>
+    }
+</script>
+
+<style>
+    /* 1. FOND DE PAGE : ON FORCE L'ANTHRACITE POUR ÉVITER LE NOIR FADE */
+    body { 
+        font-family: 'Syne', sans-serif; 
+        background-color: #121214 !important; 
+        scroll-behavior: smooth; 
+    }
+    
+    /* 2. NAVBAR COMMUNE (LÉGÈREMENT PLUS OPAQUE POUR LE RELIEF) */
+    .glass-header {
+        background: rgba(18, 18, 20, 0.9);
+        backdrop-filter: blur(25px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* 3. CARTES PREMIUM (ACCUEIL & EVENTS) : DÉGRADÉ POUR LE RELIEF */
+    .premium-card, .event-card {
+        background: linear-gradient(145deg, #1E1E22, #121214) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(15px);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* EFFET AU SURVOL : LES CARTES SE DÉTACHENT DU FOND */
+    .premium-card:hover, .event-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(148, 27, 32, 0.4) !important; /* Lueur rouge logo */
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 4. BOUTONS ELITE (ADAPTÉS POUR NE PAS CHANGER TA NAVBAR) */
+    .btn-elite {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        /* On ne force pas le border-radius ici pour garder ta forme "Espace Joueur" du HTML */
+    }
+    
+    .btn-elite:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(148, 27, 32, 0.3);
+        border-color: #941B20;
+    }
+
+    /* 5. FILTRE D'IMAGE (PLUS SOMBRE POUR LA LISIBILITÉ) */
+    .content-overlay {
+        background: linear-gradient(to top, #121214 0%, rgba(18, 18, 20, 0.7) 50%, transparent 100%);
+    }
+
+    /* 6. MENU MOBILE UNIFIÉ */
+    #mobile-menu, #mobile-overlay {
+        background: rgba(10, 10, 10, 0.98);
+        backdrop-filter: blur(20px);
+    }
+    
+    .nav-link-mobile {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+    }
+    /* LE LOGO : CLARTÉ ET PRÉSENCE */
+.logo-sober {
+    /* Contrast(1.2) : Rend le gris du Real plus percutant */
+    /* Drop-shadow : Ajoute une micro-ombre pour détourer proprement les lettres */
+    filter: contrast(1.2) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.4)) !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* EFFET DE SURVOL DYNAMIQUE */
+.group:hover .logo-sober {
+    /* Une lueur rouge subtile qui rappelle ta charte graphique */
+    filter: contrast(1.3) brightness(1.2) drop-shadow(0 0 10px rgba(148, 27, 32, 0.5)) !important;
+    transform: scale(1.05); /* Le logo "avance" vers l'utilisateur */
+}
+
+/* --- BLOC LOGO ÉLITE --- */
+@keyframes spin-neon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.rotating-beam {
+    animation: spin-neon 3s linear infinite; /* Le faisceau tourne toujours */
+}
+
+.logo-elite-container:hover .rotating-beam {
+    animation-play-state: paused; /* S'arrête au survol */
+}
+
+.logo-sober {
+    /* Filtre précis pour que le "Real" gris soit bien visible */
+    filter: contrast(1.2) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.4)) !important;
+    transition: all 0.4s ease;
+}
+/* ----------------------- */
+</style>
 </head>
-<body class="bg-black font-inter text-white selection:bg-neon selection:text-black">
 
-    <header class="w-full max-w-[1400px] mx-auto px-8 py-8 flex justify-between items-center z-50">
-        <a href="index.html" class="flex items-center gap-4 group">
-            <img src="image/logo.png" alt="Logo" class="h-12 w-auto">
-        </a>
-             <nav class="hidden md:flex gap-12">
-    <a href="complexe.html" class="...">Complexe</a>
-    <a href="tarifs.html" class="...">Tarifs</a>
-    <a href="events.html" class="...">Événements</a>
-    <a href="login.html" class="...">Réservation</a>
-</nav>
-        <a href="login.html" class="font-orbitron text-xs font-bold border border-white/30 px-6 py-2 rounded hover:bg-neon hover:border-neon transition uppercase">Connexion</a>
-    </header>
+<body class="bg-black text-white selection:bg-neon selection:text-white">
+       <header class="fixed top-0 w-full z-[100] glass-header">
+    <div class="max-w-[1400px] mx-auto px-6 h-20 md:h-24 flex justify-between items-center">
+       <a href="index.html" class="logo-elite-container group relative flex items-center justify-center p-[1.5px] overflow-hidden rounded-full transition-all duration-500 hover:scale-105">
+    <div class="rotating-beam absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_270deg,#941B20_360deg)]"></div>
+    
+    <div class="relative z-10 flex items-center justify-center bg-white/[0.05] backdrop-blur-2xl px-6 py-2 rounded-full border border-white/10">
+        <img src="image/logo.png" alt="RealFive" class="logo-sober h-8 md:h-10 w-auto object-contain">
+    </div>
+</a>
 
-    <main class="max-w-[1200px] mx-auto px-8 py-12">
-        
-        <h1 class="font-orbitron text-center text-5xl font-black mb-4">ÉVÉNEMENTS</h1>
-        <p class="text-center text-gray-400 mb-16 max-w-2xl mx-auto">Sport, plaisir et convivialité pour vos moments spéciaux.</p>
+        <nav class="hidden lg:flex gap-12">
+            <a href="index.html" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition">Accueil</a>
 
-        <div class="grid md:grid-cols-2 gap-8 mb-24">
-            <div class="bg-[#111] border border-white/10 rounded-2xl overflow-hidden group">
-                <div class="h-48 bg-gray-800 relative flex items-center justify-center">
-                    <div class="absolute inset-0 bg-neon/10 group-hover:bg-neon/20 transition duration-500"></div>
-                     <img 
-            src="image/anniversaire.jpg" 
-            alt="Anniversaires RealFive" 
-            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        >
-                </div>
-                <div class="p-8">
-                    <h3 class="font-orbitron font-bold text-2xl mb-2 text-white">ANNIVERSAIRES </h3>
-                    <p class="text-gray-400 text-sm mb-6">Offrez une expérience inoubliable avec foot, goûter et replay des matchs.</p>
-                    <button class="text-neon font-bold text-xs uppercase tracking-widest hover:text-white transition">Nous contacter &rarr;</button>
-                </div>
-            </div>
+            <a href="complexe.html" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition">Complexe</a>
+            <a href="tarifs.html" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition">Tarifs</a>
+            
+            <a href="events.html" id="nav-events" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition text-neon border-b border-neon pb-1">Événements</a>
+            
+            <a href="login.html" id="nav-resas" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition">Réservation</a>
+        </nav>
 
-            <div class="bg-[#111] border border-white/10 rounded-2xl overflow-hidden group">
-                <div class="h-48 bg-gray-800 relative flex items-center justify-center">
-                    <div class="absolute inset-0 bg-blue-500/10 group-hover:bg-blue-500/20 transition duration-500"></div>
-                    <img 
-            src="image/entreprise.jpg" 
-            alt="Entreprise RealFive" 
-            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        >
-                </div>
-                <div class="p-8">
-                    <h3 class="font-orbitron font-bold text-2xl mb-2 text-white">TEAM BUILDING </h3>
-                    <p class="text-gray-400 text-sm mb-6">Renforcez la cohésion de vos équipes autour des valeurs du sport et du fair-play.</p>
-                    <button class="text-neon font-bold text-xs uppercase tracking-widest hover:text-white transition">Demander un devis &rarr;</button>
-                </div>
-            </div>
+        <div class="flex items-center gap-4">
+            <a href="/login.html" class="btn-elite hidden sm:block font-orbitron text-[10px] font-black border border-white/20 px-8 py-3 uppercase tracking-widest hover:bg-white hover:text-black transition">
+                Espace Joueur
+            </a>
+            <button onclick="toggleMenu()" class="lg:hidden text-white text-2xl p-2">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+     <div id="mobile-menu" class="fixed inset-0 z-[110] flex flex-col items-center justify-center gap-8 translate-x-full transition-transform duration-500 lg:hidden">
+            <button onclick="toggleMenu()" class="absolute top-8 right-8 text-white text-3xl">✕</button>
+            <a href="index.html" class="nav-link-mobile">ACCUEIL</a>
+            <a href="complexe.html" class="nav-link-mobile">COMPLEXE</a>
+            <a href="tarifs.html" class="nav-link-mobile">TARIFS</a>
+            <a href="events.html" class="nav-link-mobile text-neon border-b border-neon pb-1">ÉVÉNEMENTS</a>
+            <a href="login.html" class="nav-link-mobile text-neon italic">RÉSERVATION</a>
+            <a href="login.html" class="nav-link-mobile  text-neon font-black italic">
+                Espace Joueur
+            </a>
         </div>
 
-        <section class="border-t border-white/10 pt-16 grid md:grid-cols-2 gap-12">
-            <div>
-                <h2 class="font-orbitron text-2xl font-bold mb-6 text-white">NOUS TROUVER </h2>
-                <div class="space-y-4 text-sm text-gray-300">
-                    <p class="flex items-start gap-3">
-                        <span class="text-neon mt-1">📍</span>
-                        <span>247, Rue du Chêne Brulé,<br>54700 LESMÉNILS (Bâtiment A) </span>
-                    </p>
-                    <p class="flex items-center gap-3">
-                        <span class="text-neon">🕒</span>
-                        <span>Lun-Dim: 09h00 - 01h00 </span>
-                    </p>
-                    <p class="flex items-center gap-3">
-                        <span class="text-neon">🅿️</span>
-                        <span>Parking gratuit sur place (PMR inclus) </span>
-                    </p>
+    <main class="pt-32 md:pt-44">
+        
+        <section class="max-w-[1200px] mx-auto px-4 md:px-8 text-center mb-16 md:mb-28">
+            <div class="inline-block px-4 py-2 bg-neon/10 border border-neon/30 rounded-full mb-6">
+                <span class="text-neon font-black text-[10px] uppercase tracking-[0.3em]">Sur-Mesure & Privatisations</span>
+            </div>
+            <h1 class="font-orbitron text-4xl md:text-7xl font-black mb-6 tracking-tighter">ÉVÉNEMENTS</h1>
+            <p class="text-silverGray text-sm md:text-xl max-w-2xl mx-auto font-medium">Sport, plaisir et convivialité pour vos moments spéciaux.</p>
+        </section>
+
+        <section class="max-w-[1200px] mx-auto px-4 md:px-8 mb-32">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-black italic uppercase">ANNIVERSAIRES FOOT INDOOR</h2>
+                <p class="text-neon font-bold mt-2 text-sm uppercase tracking-widest">Faites Rêver Votre Enfant ! ⚽🎈</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
+                <div class="event-card rounded-[40px] p-8 flex flex-col">
+                    <div class="mb-8">
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">⚽ Formule</span>
+                        <h3 class="font-orbitron font-black text-2xl text-white mt-1 uppercase">CHAMPION</h3>
+                        <div class="text-neon font-black text-4xl mt-3 italic">15€ <span class="text-[10px] text-gray-600">/ enfant</span></div>
+                        <p class="text-[10px] font-bold text-gray-400 mt-2">MINIMUM 10 ENFANTS</p>
+                    </div>
+                    <ul class="space-y-4 text-xs text-silverGray flex-1 mb-8">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-clock text-neon"></i> 1h de foot indoor</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-cake-candles text-neon"></i> 30 min de goûter + Gâteau</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-candy-cane text-neon"></i> Bonbons & Chips à volonté</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-bottle-water text-neon"></i> Boissons à volonté</li>
+                        <li class="flex items-center gap-3 text-white font-bold italic"><i class="fa-solid fa-star text-gold"></i> Ballon dédicacé offert</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-envelope-open-text text-neon"></i> Cartons d'invitation fournis</li>
+                    </ul>
+                    <div class="text-[9px] text-red-500/80 font-black mb-6 italic uppercase tracking-tighter">⚠️ Crampons moulés interdits</div>
+                    <button class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-neon hover:border-neon transition font-black text-xs uppercase tracking-widest">Réserver</button>
+                </div>
+
+                <div class="event-card rounded-[40px] p-8 flex flex-col border-neon/40 shadow-2xl md:scale-105 z-10 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-neon text-white text-[9px] font-black px-6 py-2 rounded-bl-2xl uppercase tracking-widest">Populaire</div>
+                    <div class="mb-8">
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">⭐ Formule</span>
+                        <h3 class="font-orbitron font-black text-2xl text-white mt-1 uppercase">STAR DU FOOT</h3>
+                        <div class="text-neon font-black text-4xl mt-3 italic">17€ <span class="text-[10px] text-gray-600">/ enfant</span></div>
+                        <p class="text-[10px] font-bold text-gray-400 mt-2">MINIMUM 10 ENFANTS</p>
+                    </div>
+                    <ul class="space-y-4 text-xs text-silverGray flex-1 mb-8">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-clock text-neon"></i> 1h de foot indoor</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-pizza-slice text-neon"></i> 30 min de goûter + 4 Pizzas</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-candy-cane text-neon"></i> Bonbons & Chips à volonté</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-bottle-water text-neon"></i> Boissons à volonté</li>
+                        <li class="flex items-center gap-3 text-white font-bold italic"><i class="fa-solid fa-star text-gold"></i> Ballon dédicacé offert</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-envelope-open-text text-neon"></i> Cartons d'invitation fournis</li>
+                    </ul>
+                    <div class="text-[9px] text-red-500/80 font-black mb-6 italic uppercase tracking-tighter">⚠️ Crampons moulés interdits</div>
+                    <button class="w-full py-4 bg-neon text-white rounded-2xl shadow-lg shadow-neon/20 font-black text-xs uppercase tracking-widest">Sélectionner</button>
+                </div>
+
+                <div class="event-card rounded-[40px] p-8 flex flex-col">
+                    <div class="mb-8">
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">🏆 Formule</span>
+                        <h3 class="font-orbitron font-black text-2xl text-white mt-1 uppercase">SUPER STAR</h3>
+                        <div class="text-neon font-black text-4xl mt-3 italic">20€ <span class="text-[10px] text-gray-600">/ enfant</span></div>
+                        <p class="text-[10px] font-bold text-gray-400 mt-2">MINIMUM 10 ENFANTS</p>
+                    </div>
+                    <ul class="space-y-4 text-xs text-silverGray flex-1 mb-8">
+                        <li class="flex items-center gap-3 text-white font-bold italic"><i class="fa-solid fa-bolt text-neon"></i> 1h30 de foot indoor</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-utensils text-neon"></i> Gâteau OU 4 Pizzas au choix</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-candy-cane text-neon"></i> Bonbons & Chips à volonté</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-bottle-water text-neon"></i> Boissons à volonté</li>
+                        <li class="flex items-center gap-3 text-white font-bold italic"><i class="fa-solid fa-star text-gold"></i> Ballon dédicacé offert</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-envelope-open-text text-neon"></i> Cartons d'invitation fournis</li>
+                    </ul>
+                    <div class="text-[9px] text-red-500/80 font-black mb-6 italic uppercase tracking-tighter">⚠️ Crampons moulés interdits</div>
+                    <button class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-neon hover:border-neon transition font-black text-xs uppercase tracking-widest">Réserver</button>
                 </div>
             </div>
 
-            <div>
-                <h2 class="font-orbitron text-2xl font-bold mb-6 text-white">CONTACT </h2>
-                <form class="space-y-4">
-                    <input type="email" placeholder="Votre Email" class="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-neon outline-none transition">
-                    <textarea placeholder="Votre message..." rows="4" class="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-neon outline-none transition"></textarea>
-                    <button type="submit" class="bg-white text-black font-bold uppercase text-xs px-8 py-3 rounded hover:bg-neon transition">Envoyer</button>
-                </form>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 bg-anthracite/20 p-8 rounded-[40px] border border-white/5">
+                <div class="text-center px-2">
+                    <div class="text-2xl mb-2">🛡️</div>
+                    <h4 class="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Animation Sécurisée</h4>
+                    <p class="text-[9px] text-gray-500 uppercase leading-tight font-bold">Matériel & encadrement Pro</p>
+                </div>
+                <div class="text-center px-2">
+                    <div class="text-2xl mb-2">🎈</div>
+                    <h4 class="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Clé en main</h4>
+                    <p class="text-[9px] text-gray-500 uppercase leading-tight font-bold">Rien à préparer pour vous</p>
+                </div>
+                <div class="text-center px-2">
+                    <div class="text-2xl mb-2">⚡</div>
+                    <h4 class="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Dès 5 ans</h4>
+                    <p class="text-[9px] text-gray-500 uppercase leading-tight font-bold">Adapté à tous les âges</p>
+                </div>
+                <div class="text-center px-2">
+                    <div class="text-2xl mb-2">📸</div>
+                    <h4 class="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Souvenirs</h4>
+                    <p class="text-[9px] text-gray-500 uppercase leading-tight font-bold">Moments forts garantis</p>
+                </div>
             </div>
         </section>
 
+        <section id="b2b" class="max-w-[1200px] mx-auto px-4 md:px-8 mb-32 pt-20 border-t border-white/5">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-black italic uppercase">REALFIVE – TEAM BUILDING & ÉVÉNEMENTS</h2>
+                <p class="text-gray-500 text-xs md:text-sm mt-2 uppercase tracking-[0.2em]">Excellence Corporate et Futsal de Haut Niveau</p>
+            </div>
+
+            <div class="event-card rounded-[40px] overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2">
+                    <div class="relative min-h-[400px] lg:min-h-full">
+                        <img src="image/entreprise.jpg" class="absolute inset-0 w-full h-full object-cover grayscale" alt="Corporate RealFive">
+                        <div class="absolute inset-0 image-overlay"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <h3 class="font-orbitron font-black text-3xl text-white mb-4 uppercase">TEAM BUILDING FUTSAL</h3>
+                            <p class="text-gray-100 text-sm leading-relaxed mb-6 font-medium">
+                                Transformez vos événements en une expérience sportive, conviviale et mémorable. Offrez à vos équipes un moment de partage, de challenge et de cohésion.
+                            </p>
+                            <div class="inline-flex items-center gap-3 bg-neon/90 px-4 py-2 rounded-lg border border-white/20 backdrop-blur-sm">
+                                <span class="text-[9px] font-black uppercase tracking-widest">Privatisation totale ou partielle disponible</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-8 md:p-12 bg-white/[0.02]">
+                        <div class="mb-10">
+                            <h4 class="text-neon font-black text-[10px] uppercase tracking-[0.3em] mb-6">UNE EXPÉRIENCE CLÉ EN MAIN</h4>
+                            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-xs text-silverGray">
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Terrains modernes & sécurisés</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Caméras intégrées (Replays)</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Privatisation sur mesure</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Tournois & défis tous niveaux</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Bar & boissons fraîches</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Pizzas & menus conviviaux</li>
+                                <li class="flex items-start gap-3"><i class="fa-solid fa-check-double text-neon mt-1"></i> Accompagnement dédié staff</li>
+                            </ul>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-10 border-t border-white/5">
+                            <div>
+                                <h4 class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4 italic">Types d'événements</h4>
+                                <p class="text-[9px] text-gray-400 uppercase leading-loose tracking-tighter font-bold">
+                                    Soirées Corporate • Networking • Lancements • Séminaires • Journées Motivation
+                                </p>
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <p class="text-[9px] text-gray-500 italic mb-4 font-bold uppercase">Projet unique ? RealFive s'occupe de tout.</p>
+                                <button class="w-full bg-white text-black font-black text-[10px] uppercase tracking-widest py-4 rounded-xl hover:bg-neon hover:text-white transition">Demander un Devis →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+                <div class="bg-white/5 border border-white/5 p-6 rounded-3xl hover:bg-neon/5 hover:border-neon transition group text-center lg:text-left">
+                    <div class="text-neon text-2xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-people-group"></i></div>
+                    <h5 class="text-xs font-black uppercase text-white mb-2">Cohésion Forte</h5>
+                    <p class="text-[10px] text-gray-500 leading-tight font-bold uppercase">Renforcer les liens en équipe</p>
+                </div>
+                <div class="bg-white/5 border border-white/5 p-6 rounded-3xl hover:bg-neon/5 hover:border-neon transition group text-center lg:text-left">
+                    <div class="text-neon text-2xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-trophy"></i></div>
+                    <h5 class="text-xs font-black uppercase text-white mb-2">Dépassement</h5>
+                    <p class="text-[10px] text-gray-500 leading-tight font-bold uppercase">Motiver dans un cadre atypique</p>
+                </div>
+                <div class="bg-white/5 border border-white/5 p-6 rounded-3xl hover:bg-neon/5 hover:border-neon transition group text-center lg:text-left">
+                    <div class="text-neon text-2xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-video"></i></div>
+                    <h5 class="text-xs font-black uppercase text-white mb-2">Captation 4K</h5>
+                    <p class="text-[10px] text-gray-500 leading-tight font-bold uppercase">Souvenirs collectifs gravés</p>
+                </div>
+                <div class="bg-white/5 border border-white/5 p-6 rounded-3xl hover:bg-neon/5 hover:border-neon transition group text-center lg:text-left">
+                    <div class="text-neon text-2xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-building-shield"></i></div>
+                    <h5 class="text-xs font-black uppercase text-white mb-2">Haut de Gamme</h5>
+                    <p class="text-[10px] text-gray-500 leading-tight font-bold uppercase">Complexe moderne & premium</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-[1200px] mx-auto px-4 md:px-8 py-20 md:py-32 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 border-t border-white/5">
+            
+            <div class="space-y-12">
+                <div>
+                    <div class="inline-block px-4 py-1.5 bg-neon/10 border border-neon/30 rounded-full mb-6">
+                        <span class="text-neon font-black text-[10px] uppercase tracking-widest">📍 Localisation</span>
+                    </div>
+                    <h2 class="font-orbitron text-3xl md:text-5xl font-black text-white">NOUS TROUVER</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="info-item p-6 md:p-8 rounded-3xl flex items-start gap-6 border border-white/5">
+                        <span class="text-3xl text-neon"><i class="fa-solid fa-map-location-dot"></i></span>
+                        <div>
+                            <h3 class="font-bold text-white mb-2 uppercase tracking-widest">Adresse</h3>
+                            <p class="text-sm text-silverGray font-medium leading-relaxed">247, Rue du Chêne Brulé<br>54700 LESMÉNILS (Bâtiment A)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item p-6 md:p-8 rounded-3xl flex items-start gap-6 border border-white/5">
+                        <span class="text-3xl text-neon"><i class="fa-solid fa-clock"></i></span>
+                        <div>
+                            <h3 class="font-bold text-white mb-2 uppercase tracking-widest">Horaires</h3>
+                            <p class="text-sm text-silverGray font-medium">Lundi - Dimanche<br>09h00 - 01h00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item p-6 md:p-8 rounded-3xl flex items-start gap-6 border border-white/5">
+                        <span class="text-3xl text-neon"><i class="fa-solid fa-square-p"></i></span>
+                        <div>
+                            <h3 class="font-bold text-white mb-2 uppercase tracking-widest">Parking Gratuit</h3>
+                            <p class="text-sm text-silverGray font-medium italic">Accès PMR disponible sur site</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-anthracite/10 p-8 md:p-12 rounded-[50px] border border-white/5 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-neon/10 blur-[100px] pointer-events-none"></div>
+                
+                <div class="mb-10">
+                    <div class="inline-block px-4 py-1.5 bg-gold/10 border border-gold/30 rounded-full mb-6">
+                        <span class="text-gold font-black text-[10px] uppercase tracking-widest">✉️ Messagerie</span>
+                    </div>
+                    <h2 class="font-orbitron text-3xl font-black text-white">ÉCRIVEZ-NOUS</h2>
+                </div>
+                
+                <form class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="text" placeholder="VOTRE NOM" class="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-white font-bold text-xs uppercase input-glow transition-all">
+                        <input type="email" placeholder="VOTRE EMAIL" class="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-white font-bold text-xs uppercase input-glow transition-all">
+                    </div>
+                    <input type="text" placeholder="OBJET DE VOTRE DEMANDE" class="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-white font-bold text-xs uppercase input-glow transition-all">
+                    <textarea placeholder="VOTRE MESSAGE..." rows="6" class="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-white font-bold text-xs uppercase input-glow transition-all resize-none"></textarea>
+                    
+                    <button type="submit" class="w-full bg-neon text-white font-black uppercase text-xs tracking-[0.2em] py-5 rounded-2xl hover:bg-white hover:text-black transition-all duration-300 shadow-xl shadow-neon/10">
+                        Envoyer le message
+                    </button>
+                </form>
+            </div>
+        </section>
     </main>
+
+    <footer class="border-t border-white/5 py-12 md:py-20 text-center">
+        <div class="max-w-[1400px] mx-auto px-8">
+            <img src="image/logo.png" alt="Logo" class="h-10 mx-auto mb-8 opacity-40">
+            <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] mb-4">RealFive © 2026 • LE VRAI FUTSAL</p>
+            <div class="flex justify-center gap-8 text-gray-500 text-xs">
+                <a href="#" class="hover:text-neon transition">Mentions</a>
+                <a href="#" class="hover:text-neon transition">CGU</a>
+                <a href="#" class="hover:text-neon transition">RGPD</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const mobileToggle = document.getElementById('mobile-toggle');
+        const mobileClose = document.getElementById('mobile-close');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+
+        mobileToggle.addEventListener('click', () => {
+            mobileOverlay.classList.remove('translate-x-full');
+            document.body.classList.add('mobile-menu-open');
+        });
+
+        mobileClose.addEventListener('click', () => {
+            mobileOverlay.classList.add('translate-x-full');
+            document.body.classList.remove('mobile-menu-open');
+        });
+        
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('translate-x-full');
+            menu.classList.toggle('translate-x-0');
+            document.body.classList.toggle('overflow-hidden');
+        }
+    
+    </script>
 </body>
 </html>

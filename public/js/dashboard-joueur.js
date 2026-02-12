@@ -55,44 +55,56 @@
             return;
         }
         
-        list.forEach(b => {
-            const date = new Date(b.start_time);
-            let statusBadge = '';
-            let progressHtml = '';
-            
-            if (b.status === 'CONFIRMED') {
-                statusBadge = '<span class="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 rounded font-bold uppercase">VALIDÉ</span>';
-            } else if (b.status === 'PENDING_PAYMENT') {
-                statusBadge = '<span class="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold uppercase">EN ATTENTE</span>';
-                const pct = Math.min((b.slots_paid / 8) * 100, 100);
-                const color = b.slots_paid >= 8 ? 'bg-green-500' : 'bg-red-500';
-                progressHtml = `
-                    <div class="w-full bg-white/10 h-1 mt-2 rounded-full overflow-hidden">
-                        <div class="${color} h-full transition-all duration-500" style="width: ${pct}%"></div>
-                    </div>
-                    <div class="flex justify-between mt-1 text-[8px] uppercase font-bold text-gray-500">
-                        <span>Payés: ${b.slots_paid}</span>
-                        <span>Min: 8</span>
-                    </div>`;
-            }
+        // Dans dashboard-joueur.js, fonction loadBookings()
+list.forEach(b => {
+    const date = new Date(b.start_time);
+    const dateFin = new Date(b.end_time); // On récupère l'heure de fin
+    const now = new Date(); // Heure actuelle
+    
+    let statusBadge = '';
+    let progressHtml = '';
+    
+    // LOGIQUE DE STATUT
+    if (now > dateFin) {
+        // Le match est terminé car l'heure actuelle a dépassé l'heure de fin
+        statusBadge = '<span class="text-[9px] bg-white/10 text-gray-400 border border-white/20 px-2 py-0.5 rounded font-bold uppercase">MATCH TERMINÉ</span>';
+    } else if (b.status === 'CONFIRMED') {
+        statusBadge = '<span class="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 rounded font-bold uppercase">VALIDÉ</span>';
+    } else if (b.status === 'PENDING_PAYMENT') {
+        statusBadge = '<span class="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold uppercase">EN ATTENTE</span>';
+        
+        const pct = Math.min((b.slots_paid / 8) * 100, 100);
+        const color = b.slots_paid >= 8 ? 'bg-green-500' : 'bg-red-500';
+        progressHtml = `
+            <div class="w-full bg-white/10 h-1 mt-2 rounded-full overflow-hidden">
+                <div class="${color} h-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex justify-between mt-1 text-[8px] uppercase font-bold text-gray-500">
+                <span>Payés: ${b.slots_paid}</span>
+                <span>Min: 8</span>
+            </div>`;
+    }
 
-            container.innerHTML += `
-                <div class="flex items-center bg-[#111] p-0 rounded-xl border border-white/5 overflow-hidden hover:border-neon/30 transition group relative">
-                    <div class="bg-white/5 p-4 text-center min-w-[80px] h-full flex flex-col justify-center border-r border-white/5">
-                        <span class="block text-white font-black text-xl leading-none">${date.getDate()}</span>
-                        <span class="block text-gray-500 text-[10px] uppercase font-bold">${date.toLocaleDateString('fr-FR', {month:'short'})}</span>
-                    </div>
-                    <div class="flex-1 p-4">
-                        <div class="flex items-center justify-between mb-1">
-                            <div class="text-white font-bold text-sm uppercase tracking-wide">${b.pitch_name}</div>
-                            ${statusBadge}
-                        </div>
-                        <div class="text-gray-400 text-xs mb-1 font-mono">${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} • Code: <span class="text-neon font-bold select-all">${b.match_code}</span></div>
-                        ${progressHtml}
-                    </div>
-                    <button onclick="window.location.href='/match.html?id=${b.match_id}'" class="bg-white text-black font-bold text-[10px] px-6 py-5 uppercase hover:bg-neon transition h-full absolute right-0 top-0 bottom-0 opacity-0 group-hover:opacity-100 translate-x-full group-hover:translate-x-0 duration-300">Accéder</button>
-                </div>`;
-        });
+    // On ajoute l'item au container
+    container.innerHTML += `
+        <div class="flex items-center bg-[#111] p-0 rounded-xl border border-white/5 overflow-hidden hover:border-neon/30 transition group relative">
+            <div class="bg-white/5 p-4 text-center min-w-[80px] h-full flex flex-col justify-center border-r border-white/5">
+                <span class="block text-white font-black text-xl leading-none">${date.getDate()}</span>
+                <span class="block text-gray-500 text-[10px] uppercase font-bold">${date.toLocaleDateString('fr-FR', {month:'short'})}</span>
+            </div>
+            <div class="flex-1 p-4">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="text-white font-bold text-sm uppercase tracking-wide">${b.pitch_name}</div>
+                    ${statusBadge}
+                </div>
+                <div class="text-gray-400 text-xs mb-1 font-mono">${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} • Code: <span class="text-neon font-bold select-all">${b.match_code}</span></div>
+                ${progressHtml}
+            </div>
+            <button onclick="window.location.href='/match.html?id=${b.match_id}'" class="bg-white text-black font-bold text-[10px] px-6 py-5 uppercase hover:bg-neon transition h-full absolute right-0 top-0 bottom-0 opacity-0 group-hover:opacity-100 translate-x-full group-hover:translate-x-0 duration-300">
+                ${now > dateFin ? 'Voir Score' : 'Accéder'}
+            </button>
+        </div>`;
+});
     } catch (e) { 
         console.error("Erreur loadBookings:", e); 
     }

@@ -77,12 +77,13 @@
             setInterval(updateTimer, 1000);
         });
 
-// 1. Remplace la fonction loadData()
+
 async function loadData() {
     try {
         const res = await fetch(`/api/match/${matchId}`);
         const data = await res.json();
         
+        // 1. Gestion des erreurs de récupération
         if(data.error) {
             if (data.error.includes("introuvable") || data.error.includes("expiré")) {
                 window.location.href = '/dashboard-joueur.html';
@@ -91,12 +92,13 @@ async function loadData() {
             return;
         }
 
+        // 2. Gestion du match annulé
         if (data.match.res_status === 'CANCELLED') {
-            document.body.innerHTML = `<div class="h-screen flex items-center justify-center bg-black text-red-500 font-orbitron">MATCH ANNULÉ</div>`;
+            document.body.innerHTML = `<div class="h-screen flex items-center justify-center bg-black text-red-500 font-orbitron text-center">MATCH ANNULÉ</div>`;
             return;
         }
 
-        // --- INFO MATCH ---
+        // 3. Mise à jour des informations de base dans le header
         document.getElementById('match-code-desk').innerText = data.match.match_code;
         document.getElementById('match-code-mob').innerText = data.match.match_code;
         document.getElementById('match-venue').innerText = data.match.terrain_name || "TERRAIN";
@@ -104,49 +106,96 @@ async function loadData() {
 
         const isCreator = (currentUser && data.match.creator_id === currentUser.id);
 
-        // --- NOMS D'ÉQUIPES (Ne pas écraser si l'utilisateur tape) ---
+        // 4. Synchronisation des noms d'équipes (A et B)
         const inpA = document.getElementById('name-A');
         const inpB = document.getElementById('name-B');
-        
         if (document.activeElement !== inpA) inpA.value = data.match.team_name_a || 'DOMICILE';
         if (document.activeElement !== inpB) inpB.value = data.match.team_name_b || 'EXTÉRIEUR';
 
         if (isCreator) {
-            inpA.disabled = false;
+            inpA.disabled = false; 
             inpB.disabled = false;
-            inpA.classList.add('cursor-text', 'hover:bg-white/5');
-            inpB.classList.add('cursor-text', 'hover:bg-white/5');
         }
 
-        // --- BOUTON PUBLIC (Logique Blindée) ---
+        // 5. Gestion de la visibilité du bouton Public/Privé pour le capitaine
         const btnDesk = document.getElementById('btn-public-desk');
         const btnMob = document.getElementById('btn-public-mob');
         
         if(isCreator) {
-            // Force l'affichage (override le CSS hidden)
             btnDesk.style.display = 'flex';
             if(btnMob) btnMob.classList.remove('hidden');
-
             if(data.match.is_public) {
-                // Mode PUBLIC -> Bouton pour rendre PRIVÉ (Vert)
                 btnDesk.innerHTML = '<span class="text-green-500">●</span> <span class="hidden lg:inline">EN LIGNE</span>';
-                btnDesk.className = "flex border border-green-500/50 text-green-500 bg-green-500/10 w-10 h-10 lg:w-auto lg:h-auto lg:px-4 lg:py-3 rounded items-center justify-center gap-2 text-xs font-bold uppercase hover:bg-green-500/20 transition shrink-0";
-                if(btnMob) btnMob.innerText = "● RENDRE PRIVÉ";
+                btnDesk.className = "flex border border-green-500/50 text-green-500 bg-green-500/10 px-4 py-3 rounded items-center justify-center gap-2 text-xs font-bold uppercase hover:bg-green-500/20 transition shrink-0";
             } else {
-                // Mode PRIVÉ -> Bouton pour rendre PUBLIC (Gris)
                 btnDesk.innerHTML = '<span class="text-gray-400">🌐</span> <span class="hidden lg:inline">PUBLIC</span>';
-                btnDesk.className = "flex border border-dashed border-white/30 text-gray-400 w-10 h-10 lg:w-auto lg:h-auto lg:px-4 lg:py-3 rounded items-center justify-center gap-2 text-xs font-bold uppercase hover:text-white hover:border-white transition shrink-0";
-                if(btnMob) btnMob.innerText = "🌐 RENDRE PUBLIC";
+                btnDesk.className = "flex border border-dashed border-white/30 text-gray-400 px-4 py-3 rounded items-center justify-center gap-2 text-xs font-bold uppercase hover:text-white hover:border-white transition shrink-0";
             }
         } else {
-            btnDesk.style.display = 'none';
+            if(btnDesk) btnDesk.style.display = 'none';
             if(btnMob) btnMob.classList.add('hidden');
         }
 
+        // 6. Mise à jour des listes de joueurs et du terrain tactique
         renderLists(data.players, isCreator);
         renderPitch(data.players);
 
-    } catch(e) { console.error("Erreur loadData:", e); }
+        // 7. --- LOGIQUE DE SCORE, CLÔTURE ET SYSTÈME DE VOTE EN DIRECT ---
+        const headerDisplay = document.getElementById('header-main-display');
+        const statusDot = document.getElementById('status-dot');
+
+        if (data.match.status === 'PLAYED') {
+            // CAS A : Le score a été validé. On affiche le résultat final.
+            if (headerDisplay) {
+                headerDisplay.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="text-neon font-orbitron text-3xl font-black">${data.match.score_home}</span>
+                        <span class="text-white font-orbitron text-xl opacity-30">-</span>
+                        <span class="text-red-500 font-orbitron text-3xl font-black">${data.match.score_away}</span>
+                    </div>`;
+            }
+            if(statusDot) {
+                statusDot.classList.remove('bg-neon', 'animate-pulse');
+                statusDot.classList.add('bg-gray-500'); 
+            }
+            document.getElementById('match-venue').innerText = "MATCH TERMINÉ";
+
+            // --- NOUVEAU : ACTIVATION DU BOUTON DE VOTE POUR TOUS LES JOUEURS ---
+            if (!document.getElementById('open-vote-btn')) {
+                const voteBtn = document.createElement('button');
+                voteBtn.id = 'open-vote-btn';
+                voteBtn.className = "fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white text-black font-black px-8 py-4 rounded-full shadow-neon z-[60] uppercase text-sm animate-pulse";
+                voteBtn.innerText = "⭐ Voter pour les rôles (XP)";
+                voteBtn.onclick = () => showVotingSystem(data.players);
+                document.body.appendChild(voteBtn);
+            }
+
+            // --- LIVE DASHBOARD : Actualisation du tableau des votes en temps réel ---
+            // Cette fonction va chercher les votes en BDD et met à jour ton tableau de stats
+            refreshLiveVotes(data.players); 
+
+        } else {
+            // CAS B : Le match est physiquement fini (heure passée) mais le score n'est pas encore saisi.
+            const now = new Date();
+            const matchEndTime = new Date(data.match.end_time);
+            const isCaptain = (currentUser && data.match.creator_id === currentUser.id);
+            const isAdmin = (currentUser && currentUser.role === 'ADMIN');
+
+            if (now > matchEndTime && (isCaptain || isAdmin)) {
+                // Ouverture automatique de la modal de saisie des buts pour le capitaine/admin
+                const modal = document.getElementById('scoreModal');
+                if (modal && modal.classList.contains('hidden')) {
+                    openScoreModal(data);
+                }
+            }
+        }
+
+        // 8. Vérification de l'affichage du bouton de secours (Saisir les Scores)
+        checkAdminScoreButton(data);
+
+    } catch(e) { 
+        console.error("Erreur dans loadData:", e); 
+    }
 }
 
 // 2. Remplace la fonction renderLists()
@@ -222,7 +271,7 @@ function renderLists(players, isCreator) {
             // CORRECTION : On ajoute le Nom et la Note dans le HTML
             field.innerHTML += `
                 <div class="player-card ${cls}" style="top:${pos.top}; left:${pos.left}">
-                    <div class="player-rating">${p.overall_rating || '6.0'}</div>
+                    <div class="player-rating">${p.overall_rating || '5.0'}</div>
                     <img src="${p.avatar_url || 'https://via.placeholder.com/45'}" class="card-img">
                     <div class="player-name">${p.first_name}</div>
                 </div>`;
@@ -535,4 +584,201 @@ async function movePlayer(targetId, side) {
             buttons.forEach(btn => btn.disabled = false);
         }, 300);
     }
+}
+
+// --- ADMIN SCORE SUBMISSION ---  MATCH Terminé 
+
+
+let currentPlayersData = []; // Pour stocker les joueurs localement
+
+// Modifier la fonction loadData pour inclure le bouton Admin
+// Dans match.js
+// Dans match.js
+async function checkAdminScoreButton(data) {
+    const now = new Date();
+    const matchEndTime = new Date(data.match.end_time);
+    
+    // On définit qui est le capitaine (celui qui a réservé)
+    const isCaptain = (currentUser && data.match.creator_id === currentUser.id);
+    const isAdmin = (currentUser && currentUser.role === 'ADMIN');
+
+    // La popup s'affiche si l'utilisateur est ADMIN OU CAPITAINE, 
+    // que le match est fini et qu'il n'est pas déjà marqué "PLAYED"
+    if ((isAdmin || isCaptain) && now > matchEndTime && data.match.status !== 'PLAYED') {
+        if (!document.getElementById('admin-score-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'admin-score-btn';
+            btn.className = "fixed bottom-24 right-8 z-[50] bg-yellow-500 text-black font-black px-6 py-3 rounded-full shadow-2xl animate-bounce uppercase text-xs";
+            btn.innerText = "Saisir les Scores 🏆";
+            btn.onclick = () => openScoreModal(data);
+            document.body.appendChild(btn);
+        }
+    }
+}
+
+function openScoreModal(data) {
+    currentPlayersData = data.players;
+    document.getElementById('label-teamA').innerText = data.match.team_name_a;
+    document.getElementById('label-teamB').innerText = data.match.team_name_b;
+    
+    const listA = document.getElementById('players-list-scoreA');
+    const listB = document.getElementById('players-list-scoreB');
+    listA.innerHTML = ''; listB.innerHTML = '';
+
+    data.players.forEach(p => {
+        const row = `
+            <div class="flex items-center justify-between bg-white/5 p-2 rounded">
+                <span class="text-xs text-white truncate w-24">${p.first_name}</span>
+                <input type="number" data-user-id="${p.id}" class="player-goal-input w-12 bg-black border border-white/10 text-white text-center rounded text-xs" value="0" min="0">
+            </div>`;
+        if(p.team_side === 'A') listA.innerHTML += row;
+        else listB.innerHTML += row;
+    });
+
+    document.getElementById('scoreModal').classList.remove('hidden');
+}
+
+async function submitFinalScore(e) {
+    e.preventDefault();
+    const scoreA = parseInt(document.getElementById('final-scoreA').value);
+    const scoreB = parseInt(document.getElementById('final-scoreB').value);
+    
+    const goalsData = {};
+    document.querySelectorAll('.player-goal-input').forEach(input => {
+        goalsData[input.dataset.userId] = parseInt(input.value);
+    });
+
+    try {
+        const res = await fetch('/api/match/update-score-full', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ matchId, scoreA, scoreB, goalsData })
+        });
+        const result = await res.json();
+        if(result.success) {
+            alert("✅ Scores validés et XP distribuée !");
+            window.location.reload();
+        }
+    } catch(e) { alert("Erreur lors de la validation"); }
+}
+
+
+function showVotingSystem(players) {
+    const targets = players.filter(p => p.id !== currentUser.id);
+    
+    let html = `
+    <div id="vote-overlay" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <h2 class="font-orbitron text-xl md:text-2xl font-black text-white mb-8 tracking-tighter">QUI A BRILLE SUR LE TERRAIN ?</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl">`;
+
+    targets.forEach(p => {
+        html += `
+        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl text-center hover:bg-white/10 transition shadow-2xl">
+            <div class="relative w-16 h-16 mx-auto mb-3">
+                <img src="${p.avatar_url || '/image/default-avatar.png'}" class="w-full h-full rounded-full border-2 border-neon object-cover">
+                <div class="absolute -bottom-1 -right-1 bg-neon text-black text-[8px] font-black px-1 rounded-full">${p.overall_rating || '5.0'}</div>
+            </div>
+            <h3 class="font-orbitron font-bold text-white uppercase text-sm mb-4">${p.first_name}</h3>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="sendVote(${p.id}, 'mvp')" class="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 py-2 rounded font-black hover:bg-yellow-500 hover:text-black transition">🥇 MVP</button>
+                <button onclick="sendVote(${p.id}, 'worst')" class="text-[9px] bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded font-black hover:bg-red-500 hover:text-white transition">💀 PIRE</button>
+                <button onclick="sendVote(${p.id}, 'strat')" class="text-[9px] bg-blue-500/10 text-blue-500 border border-blue-500/20 py-2 rounded font-black hover:bg-blue-500 hover:text-white transition">🧠 STRAT.</button>
+                <button onclick="sendVote(${p.id}, 'fairplay')" class="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 py-2 rounded font-black hover:bg-green-500 hover:text-white transition">🤝 FAIRPLAY</button>
+                <button onclick="sendVote(${p.id}, 'clutch')" class="text-[9px] bg-purple-500/10 text-purple-500 border border-purple-500/20 py-2 rounded font-black hover:bg-purple-500 hover:text-white transition">⚡ CLUTCH</button>
+                <button onclick="sendVote(${p.id}, 'reveal')" class="text-[9px] bg-orange-500/10 text-orange-500 border border-orange-500/20 py-2 rounded font-black hover:bg-orange-500 hover:text-white transition">🌟 RÉVÉL.</button>
+            </div>
+        </div>`;
+    });
+
+    html += `</div>
+        <button onclick="document.getElementById('vote-overlay').remove()" class="mt-10 px-8 py-3 border border-white/20 rounded-full text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:text-white hover:border-white transition">Fermer</button>
+    </div>`;
+    
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function sendVote(targetId, category) {
+    try {
+        const res = await fetch('/api/match/vote', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ matchId, targetId, category })
+        });
+        const data = await res.json();
+        if(data.success) {
+            alert("✅ Vote enregistré ! XP distribuée.");
+        } else {
+            alert("⚠️ " + data.error);
+        }
+    } catch(e) { alert("Erreur réseau"); }
+}
+
+
+async function refreshLiveVotes(players) {
+    try {
+        const res = await fetch(`/api/match/${matchId}/votes`);
+        const votesData = await res.json();
+
+        // 1. Initialisation du Tally (compteur)
+        const tally = {};
+        players.forEach(p => {
+            tally[p.id] = { name: p.first_name, mvp:0, worst:0, strat:0, fairplay:0, clutch:0, reveal:0 };
+        });
+
+        // 2. Remplissage avec les données réelles
+        votesData.forEach(v => {
+            if (tally[v.target_id]) tally[v.target_id][v.category] = v.count;
+        });
+
+        // 3. Calcul des Leaders (pour les boîtes du haut)
+        const categories = ['mvp', 'worst', 'strat', 'fairplay', 'clutch', 'reveal'];
+        const leaders = {};
+        categories.forEach(cat => {
+            let max = 0; let leader = "--";
+            players.forEach(p => {
+                if(tally[p.id][cat] > max) { max = tally[p.id][cat]; leader = tally[p.id].name; }
+                else if(tally[p.id][cat] === max && max > 0) { leader += " & " + tally[p.id].name; }
+            });
+            leaders[cat] = leader;
+        });
+
+        // 4. Construction du HTML (Style FIFA / Maquette)
+        let html = `
+        <div class="current-winners flex flex-wrap justify-center gap-3 mb-6">
+            <div class="winner-box-match"><span>🥇 MVP</span><strong>${leaders.mvp}</strong></div>
+            <div class="winner-box-match"><span>💀 PIRE</span><strong>${leaders.worst}</strong></div>
+            <div class="winner-box-match"><span>🧠 STRAT.</span><strong>${leaders.strat}</strong></div>
+        </div>
+
+        <div class="live-dashboard-match bg-black/40 border border-red-500/20 rounded-xl p-6">
+            <h3 class="text-red-500 font-orbitron text-[10px] tracking-[3px] mb-6 text-center uppercase">📊 Statistiques de fin de match</h3>
+            <table class="w-full text-center text-[11px]">
+                <thead>
+                    <tr class="text-gray-500 uppercase border-b border-white/5">
+                        <th class="pb-4 text-left">Joueur</th>
+                        <th class="pb-4">MVP</th><th class="pb-4">PIRE</th><th class="pb-4">STRAT</th>
+                        <th class="pb-4">FAIR</th><th class="pb-4">CLUTCH</th><th class="pb-4">RÉVÉL</th>
+                    </tr>
+                </thead>
+                <tbody class="text-white">`;
+
+        players.forEach(p => {
+            const s = tally[p.id];
+            html += `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                    <td class="py-4 text-left font-bold">${s.name}</td>
+                    <td class="${s.mvp > 0 ? 'text-yellow-500 font-black' : 'opacity-30'}">${s.mvp}</td>
+                    <td class="${s.worst > 0 ? 'text-red-500' : 'opacity-30'}">${s.worst}</td>
+                    <td class="opacity-80">${s.strat}</td><td class="opacity-80">${s.fairplay}</td>
+                    <td class="opacity-80">${s.clutch}</td><td class="opacity-80">${s.reveal}</td>
+                </tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        
+        const container = document.getElementById('live-vote-results');
+        if (container) container.innerHTML = html;
+
+    } catch(e) { console.error("Erreur refresh votes:", e); }
 }

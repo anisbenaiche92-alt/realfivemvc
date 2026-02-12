@@ -100,7 +100,6 @@ async function loadTerrainsForComplex(complexId) {
             <div class="pitch-card rounded-xl p-6 cursor-pointer ${!t.isAvailable ? 'opacity-50' : ''}" onclick="${t.isAvailable ? `selectTerrain(this, ${t.id}, '${t.name}', ${t.finalPrice})` : ''}">
                 <div class="flex justify-between mb-3">
                     <span class="text-[10px] font-bold border border-neon bg-neon/10 px-2 py-1 rounded text-neon">${t.sport_type}</span>
-                    <div class="text-lg font-bold text-white">${t.finalPrice}€/h</div>
                 </div>
                 <h4 class="font-orbitron font-bold text-lg text-white mb-2">${t.name}</h4>
                 <div class="text-xs text-gray-400 space-y-1">
@@ -191,15 +190,16 @@ function generateDates() {
     }
 
     function setDuration(hours) {
-        selectedDuration = hours;
-        document.querySelectorAll('.duration-btn').forEach(b => {
-            b.classList.remove('active', 'text-gray-400');
-            if(b.id === `dur-${hours}`) b.classList.add('active');
-            else b.classList.add('text-gray-400');
-        });
-        if(selectedTerrainId) generateTimeSlots(); 
-        updateBar();
-    }
+    selectedDuration = hours;
+    document.querySelectorAll('.duration-btn').forEach(b => {
+        b.classList.remove('active', 'text-gray-400');
+        // On utilise l'ID dur-1, dur-1.5 ou dur-2
+        if(b.id === `dur-${hours}`) b.classList.add('active');
+        else b.classList.add('text-gray-400');
+    });
+    if(selectedTerrainId) generateTimeSlots(); 
+    updateBar();
+}
 
    
     function selectTerrain(el, id, name, price) {
@@ -211,43 +211,88 @@ function generateDates() {
         updateAvailability();
     }
 
-    function generateTimeSlots() {
-        const grid = document.getElementById('slots-grid');
-        grid.innerHTML = '';
+   function generateTimeSlots() {
+    const grid = document.getElementById('slots-grid');
+    grid.innerHTML = '';
+    
+    // Déterminer le jour de la semaine pour les heures pleines (Sam-Dim)
+    const d = new Date(selectedDate);
+    const day = d.getDay(); // 0=Dimanche, 6=Samedi
+    const isWeekend = (day === 0 || day === 6);
+
+    for(let h=8; h<=23; h++) { // Plage de 8h à 23h
+        const time = `${h}:00`;
         
-        for(let h=10; h<=22; h++) {
-            const time = `${h}:00`;
-            const isTaken = occupiedSlots.includes(h);
-            let durationConflict = false;
-            if (selectedDuration === 2) {
-                if (occupiedSlots.includes(h+1) || h === 22) durationConflict = true;
-            }
+        // --- LOGIQUE DE PRIX ---
+        // Heures Pleines : Weekend (toute la journée) ou Semaine (18h-22h)
+        const isPeak = isWeekend || (h >= 18 && h <= 22);
+        
+        let price = 0;
+        if (selectedDuration === 1) price = isPeak ? 90 : 70;
+        else if (selectedDuration === 1.5) price = isPeak ? 130 : 100;
+        else if (selectedDuration === 2) price = isPeak ? 170 : 130;
 
-            const btn = document.createElement('button');
-            // J'applique ici la classe CSS 'time-slot-btn' que j'ai définie dans le <style>
-            btn.className = 'time-slot-btn py-4 rounded-xl text-sm font-bold w-full';
-            btn.innerText = time;
-            
-            if (isTaken || durationConflict) {
-                btn.disabled = true;
-                btn.innerText = "COMPLET";
-            } else {
-                btn.onclick = () => selectTime(btn, time);
-            }
-            grid.appendChild(btn);
+        const isTaken = occupiedSlots.includes(h);
+        
+        // Gestion des conflits selon la durée
+        let durationConflict = false;
+        if (selectedDuration > 1) {
+            if (occupiedSlots.includes(h + 1) || h === 23) durationConflict = true;
+            // Pour 2h, on check aussi h+2
+            if (selectedDuration === 2 && (occupiedSlots.includes(h + 2) || h >= 22)) durationConflict = true;
         }
-    }
 
-   function selectTime(btn, time) {
-    document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
+        const btn = document.createElement('button');
+        btn.className = 'time-slot-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border border-white/5 transition hover:border-neon';
+        
+        if (isTaken || durationConflict) {
+            btn.disabled = true;
+            btn.innerHTML = `
+                <span class="text-[10px] font-bold opacity-50">${time}</span>
+                <span class="text-[9px] text-red-500 font-black">COMPLET</span>
+            `;
+            btn.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+            btn.onclick = () => selectTime(btn, time);
+            btn.innerHTML = `
+                <span class="text-[10px] font-bold text-gray-400">${time}</span>
+                <span class="text-xs font-orbitron font-black text-white">${price}€</span>
+            `;
+        }
+        grid.appendChild(btn);
+    }
+}
+
+  function selectTime(btn, time) {
+    document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected', 'border-neon', 'bg-neon/10'));
+    btn.classList.add('selected', 'border-neon', 'bg-neon/10');
     selectedTime = time;
     
-    // Afficher la section paiement
-    document.getElementById('payment-section').classList.remove('hidden');
+    // On extrait le prix directement depuis le bouton cliqué pour être sûr
+    const priceText = btn.querySelector('.text-white').innerText;
+    basePrice = parseFloat(priceText.replace('€', ''));
     
+    document.getElementById('payment-section').classList.remove('hidden');
     document.getElementById('booking-bar').classList.remove('translate-y-full');
     updateBar();
+}
+
+function updateBar() {
+    // Ici, basePrice contient déjà le prix total calculé selon la durée et le créneau
+    const total = basePrice; 
+    const splitAmount = (total / 10).toFixed(2);
+    
+    document.getElementById('split-price').innerText = splitAmount + ' €';
+    document.getElementById('full-price').innerText = total.toFixed(2) + ' €';
+    
+    const finalPrice = selectedPaymentMode === 'SPLIT' ? splitAmount : total.toFixed(2);
+    document.getElementById('display-price').innerText = finalPrice + ' €';
+    
+    if(selectedTime) {
+        const startH = parseInt(selectedTime.split(':')[0]);
+        const mode = selectedPaymentMode === 'SPLIT' ? '(Partagé)' : '(Intégral)';
+        document.getElementById('selection-summary').innerText = `${selectedTerrainName} • ${startH}h (${selectedDuration}h) ${mode}`;
+    }
 }
 
    function updateBar() {

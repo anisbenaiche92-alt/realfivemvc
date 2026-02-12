@@ -6,12 +6,19 @@ exports.getFriends = async (req, res) => {
         // CORRECTION : On retire u.overall_rating qui n'existe pas en base
         // On met '6.0' as overall_rating pour simuler une note si le front en a besoin
         const [rows] = await db.query(`
-            SELECT u.id, u.first_name, u.last_name, u.avatar_url, '6.0' as overall_rating, u.position 
-            FROM friends f 
-            JOIN users u ON f.friend_id = u.id 
-            WHERE f.user_id = ?`, 
-            [req.session.user.id]
-        );
+    SELECT 
+        u.id, 
+        u.first_name, 
+        u.last_name, 
+        u.avatar_url, 
+        u.position,
+        -- Cette ligne calcule la vraie moyenne ou met 5.0 si aucun match n'est joué
+        IFNULL((SELECT ROUND(AVG(rating), 1) FROM match_participants WHERE user_id = u.id), 5.0) as overall_rating
+    FROM friends f 
+    JOIN users u ON f.friend_id = u.id 
+    WHERE f.user_id = ?`, 
+    [req.session.user.id]
+);
         res.json(rows);
     } catch (e) { 
         console.error("Erreur getFriends:", e); // Ajout du log pour voir l'erreur console
@@ -170,12 +177,12 @@ exports.getPlayerStats = async (req, res) => {
             else if(myScore < oppScore) result = 'DÉFAITE';
             
             totalGoals += (row.goals || 0);
-            totalRating += parseFloat(row.rating || 6.0);
-            history.push({ date: row.start_time, result, score: `${row.score_home}-${row.score_away}`, myRating: row.rating || 6.0 });
+            totalRating += parseFloat(row.rating || 5.0);
+            history.push({ date: row.start_time, result, score: `${row.score_home}-${row.score_away}`, myRating: row.rating || 5.0 });
         });
 
         const totalMatches = rows.length;
-        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "6.0";
+        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "5.0";
         const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
         const base = parseFloat(avgRating) * 10;
 
@@ -203,8 +210,8 @@ exports.getUserStats = async (req, res) => {
         const [rows] = await db.query(`SELECT mp.rating, mp.goals FROM match_participants mp JOIN matches m ON mp.match_id = m.id JOIN reservations r ON m.reservation_id = r.id WHERE mp.user_id = ? AND r.status != 'CANCELLED'`, [targetId]);
         
         let totalGoals=0, totalRating=0;
-        rows.forEach(r => { totalGoals += r.goals||0; totalRating += parseFloat(r.rating||6.0); });
-        const avgRating = rows.length > 0 ? (totalRating/rows.length).toFixed(1) : "6.0";
+        rows.forEach(r => { totalGoals += r.goals||0; totalRating += parseFloat(r.rating||5.0); });
+        const avgRating = rows.length > 0 ? (totalRating/rows.length).toFixed(1) : "5.0";
         const base = parseFloat(avgRating) * 10;
 
         res.json({
@@ -257,8 +264,25 @@ exports.verifyPromo = async (req, res) => {
         const promo = rows[0];
 
         // 3. Vérifications de validité
-        if (new Date() > new Date(promo.expires_at)) return res.status(400).json({ valid: false, error: "Code expiré" });
-        if (promo.current_uses >= promo.max_uses) return res.status(400).json({ valid: false, error: "Code épuisé" });
+        const now = new Date();
+
+        // --- NOUVEAU : Vérification de la date de début ---
+        if (promo.starts_at && now < new Date(promo.starts_at)) {
+            return res.status(400).json({ 
+                valid: false, 
+                error: "Ce code n'est pas encore utilisable." 
+            });
+        }
+
+        // Vérification de l'expiration
+        if (now > new Date(promo.expires_at)) {
+            return res.status(400).json({ valid: false, error: "Code expiré" });
+        }
+
+        // Vérification du nombre d'utilisations
+        if (promo.current_uses >= promo.max_uses) {
+            return res.status(400).json({ valid: false, error: "Code épuisé" });
+        }
 
         // 4. CALCUL DU PRIX
         let newPrice = parseFloat(amount);
@@ -273,35 +297,18 @@ exports.verifyPromo = async (req, res) => {
             label = `-${promo.value}€`;
         } 
         else if (promo.discount_type === 'HOURLY_FIXED') {
-            // === LOGIQUE TARIF BIENVENUE (5€/h) ===
-            
-            // 1. Récupération du tarif de base (5€)
             const ratePerPlayer = parseFloat(promo.value); 
             
-            // 2. Gestion intelligente de la durée (Heures vs Minutes)
-            // Si la durée envoyée est > 5, c'est sûrement des minutes (ex: 60, 90) -> on divise par 60.
-            // Si c'est <= 5, c'est sûrement déjà des heures (ex: 1, 1.5, 2).
             let durationH = parseFloat(duration);
             if (durationH > 5) {
                 durationH = durationH / 60;
             }
 
-            // 3. Détection : Paiement Seul (SPLIT) ou Terrain Complet (FULL) ?
-            // On regarde le "amount" (prix initial). 
-            // S'il est inférieur à 30€ (ex: 10€), c'est une part individuelle.
-            // S'il est supérieur (ex: 80€), c'est le terrain complet.
-            
             if (parseFloat(amount) < 30) {
-                // --- CAS 1 : IL PAIE JUSTE SA PART ---
-                // Calcul : 5€ * Durée en heures
-                // Ex: 1h = 5€, 1h30 = 7.50€
                 newPrice = ratePerPlayer * durationH;
                 label = `Tarif Découverte (${ratePerPlayer}€/pers)`;
             } else {
-                // --- CAS 2 : IL PAIE TOUT LE TERRAIN ---
-                // Calcul : 5€ * 10 joueurs * Durée en heures
-                // Ex: 1h = 50€, 1h30 = 75€
-                const totalPlayers = 10; // Standard Futsal
+                const totalPlayers = 10; 
                 newPrice = ratePerPlayer * totalPlayers * durationH;
                 label = `Tarif Découverte (${ratePerPlayer * totalPlayers}€/terrain)`;
             }

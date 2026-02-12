@@ -457,6 +457,51 @@
             </div>
         </div>
     </div>
+    <div class="glass-card p-8 mt-8 border-t-4 border-t-[#EF1A2D]">
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-id-card text-2xl text-[#EF1A2D]"></i>
+            <h3 class="font-orbitron font-bold text-xl text-white">PARAMÈTRES CARTE FIDÉLITÉ</h3>
+        </div>
+        <button onclick="marketingManager.addRewardRow()" class="text-[10px] bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-full font-bold uppercase tracking-widest transition">
+            <i class="fa-solid fa-plus mr-1"></i> Ajouter un palier
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div class="space-y-6">
+            <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Calcul de la Note</h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="section-label">Bonus par Match</label>
+                    <input type="number" id="loyalty-coeff-match" step="0.01" value="0.15" class="input-field">
+                </div>
+                <div>
+                    <label class="section-label">Bonus par Série</label>
+                    <input type="number" id="loyalty-coeff-streak" step="0.01" value="0.20" class="input-field">
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-500 italic">Formule : 1.0 + (Matchs × Coeff) + (Série × Coeff)</p>
+        </div>
+
+        <div class="space-y-4">
+            <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Paliers de Récompenses</h4>
+            <div id="loyalty-rewards-container" class="space-y-3">
+                <div class="flex gap-2 items-center reward-config-row">
+                    <input type="number" placeholder="10" class="w-20 input-field text-center font-bold" value="10">
+                    <input type="text" placeholder="Ex: Badge 'Pilier'..." class="flex-1 input-field text-sm" value="Badge 'Pilier' & Accès VIP">
+                    <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-500 p-2"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-white/5">
+        <button onclick="marketingManager.saveLoyaltySettings()" class="btn-primary w-full md:w-auto px-10 bg-[#EF1A2D] text-black hover:bg-white font-black">
+            <i class="fa-solid fa-save mr-2"></i> ENREGISTRER LA CONFIGURATION
+        </button>
+    </div>
+</div>
 </div>
 
 <!-- SECTION CONFIGURATION / SETTINGS -->
@@ -1030,6 +1075,10 @@
                     <label class="section-label">Nb. Utilisations Max</label>
                     <input type="number" id="promo-uses" placeholder="100" class="input-field">
                 </div>
+                <div>
+        <label class="section-label">Date Début</label>
+        <input type="date" id="promo-start" class="input-field text-gray-400">
+    </div>
                 <div>
                     <label class="section-label">Date Expiration</label>
                     <input type="date" id="promo-date" class="input-field text-gray-400">

@@ -129,30 +129,53 @@ exports.createReservation = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const start = new Date(start_time).toISOString().slice(0, 19).replace('T', ' ');
-        const end = new Date(end_time).toISOString().slice(0, 19).replace('T', ' ');
+        // 1. Formatage des dates pour MySQL
+        const start = new Date(start_time);
+        const end = new Date(end_time);
+        const sqlStart = start.toISOString().slice(0, 19).replace('T', ' ');
+        const sqlEnd = end.toISOString().slice(0, 19).replace('T', ' ');
 
+        // 2. Vérification des collisions
         const [conflicts] = await connection.query(
             `SELECT id FROM reservations WHERE terrain_id = ? AND status != 'CANCELLED' AND ((start_time < ? AND end_time > ?)) FOR UPDATE`, 
-            [terrain_id, end, start]
+            [terrain_id, sqlEnd, sqlStart]
         );
         if (conflicts.length > 0) throw new Error("Créneau indisponible (collision détectée)");
 
+        // 3. Calcul du prix selon la nouvelle grille (SMART vs PRIME)
         let finalPrice = 0;
-        if(price_override) {
+        if (price_override) {
             finalPrice = parseFloat(price_override);
         } else {
-            const [terrain] = await connection.query('SELECT hourly_rate FROM terrains WHERE id = ?', [terrain_id]);
-            const durationHours = (new Date(end) - new Date(start)) / 3600000;
-            finalPrice = terrain[0].hourly_rate * durationHours;
+            const durationMinutes = (end - start) / (1000 * 60);
+            const startHour = start.getHours();
+            const day = start.getDay(); // 0=Dimanche, 6=Samedi
+
+            // Définition Heures Pleines (PRIME) : Sam-Dim OU (Lun-Ven entre 18h et 22h)
+            const isWeekend = (day === 0 || day === 6);
+            const isPeakTime = isWeekend || (startHour >= 18 && startHour < 23);
+
+            if (isPeakTime) {
+                // Tarifs PRIME
+                if (durationMinutes <= 60) finalPrice = 9;
+                else if (durationMinutes <= 90) finalPrice = 13;
+                else finalPrice = 17; // 2h
+            } else {
+                // Tarifs SMART (Heures Creuses)
+                if (durationMinutes <= 60) finalPrice = 7;
+                else if (durationMinutes <= 90) finalPrice = 10;
+                else finalPrice = 13; // 2h
+            }
         }
 
+        // 4. Insertion de la réservation
         const [resRes] = await connection.query(
             `INSERT INTO reservations (user_id, terrain_id, start_time, end_time, total_price, status, payment_mode, source, payment_status) 
              VALUES (?, ?, ?, ?, ?, 'CONFIRMED', 'FULL', ?, 'UNPAID')`, 
-            [req.session.user.id, terrain_id, start, end, finalPrice, source || 'GUICHET']
+            [req.session.user.id, terrain_id, sqlStart, sqlEnd, finalPrice, source || 'GUICHET']
         );
 
+        // 5. Création automatique du match
         const matchCode = 'ADM-' + Math.floor(10000 + Math.random() * 90000);
         await connection.query(
             `INSERT INTO matches (reservation_id, status, match_code) VALUES (?, 'SCHEDULED', ?)`, 
@@ -160,7 +183,7 @@ exports.createReservation = async (req, res) => {
         );
 
         await connection.commit();
-        res.json({ success: true, id: resRes.insertId });
+        res.json({ success: true, id: resRes.insertId, calculatedPrice: finalPrice });
 
     } catch (e) { 
         await connection.rollback();
@@ -380,18 +403,38 @@ exports.getPromos = async (req, res) => {
     } catch(e) { res.status(500).json([]); }
 };
 
+// VERSION MISE À JOUR : Ajout de la date de début (starts_at)
 exports.createPromo = async (req, res) => {
-    const { code, type, value, max_uses, expires_at } = req.body;
+    // On récupère starts_at envoyé par le client
+    const { code, type, value, max_uses, starts_at, expires_at } = req.body;
+    
     try {
         const [complex] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [req.session.user.id]);
         
+        if (!complex.length) {
+            return res.status(404).json({ error: "Complexe introuvable" });
+        }
+
+        // On ajoute la colonne starts_at dans l'INSERT
         await db.query(`
-            INSERT INTO promo_codes (complex_id, code, discount_type, value, max_uses, expires_at) 
-            VALUES (?, ?, ?, ?, ?, ?)`, 
-            [complex[0].id, code.toUpperCase(), type, value, max_uses, expires_at]
+            INSERT INTO promo_codes (complex_id, code, starts_at, discount_type, value, max_uses, expires_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`, 
+            [
+                complex[0].id, 
+                code.toUpperCase(), 
+                starts_at, // La nouvelle valeur
+                type, 
+                value, 
+                max_uses, 
+                expires_at
+            ]
         );
+
         res.json({ success: true });
-    } catch(e) { res.status(500).json({ error: "Erreur création code" }); }
+    } catch(e) { 
+        console.error("Erreur SQL Promo:", e);
+        res.status(500).json({ error: "Erreur lors de la création du code promo" }); 
+    }
 };
 
 exports.deletePromo = async (req, res) => {
@@ -516,3 +559,33 @@ exports.getGallery = async (req, res) => { res.json([]); };
 exports.deleteGalleryImage = async (req, res) => { res.json({success:true}); };
 exports.updateSimplePricing = async (req, res) => { res.json({success:true}); };
 exports.getPricingRules = async (req, res) => { res.json([]); };
+
+
+
+// Récupérer les réglages de fidélité actuels
+exports.getLoyaltySettings = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT config FROM loyalty_settings WHERE id = 1');
+        if (rows.length > 0) {
+            res.json({ config: JSON.parse(rows[0].config) });
+        } else {
+            res.json({ config: null });
+        }
+    } catch (e) {
+        res.status(500).json({ error: "Erreur lors de la récupération des réglages" });
+    }
+};
+
+// Enregistrer les nouveaux réglages (Coefficients + Paliers)
+exports.updateLoyaltySettings = async (req, res) => {
+    const config = JSON.stringify(req.body); // Contient coeffMatch, coeffStreak et rewards
+    try {
+        await db.query(
+            'INSERT INTO loyalty_settings (id, config) VALUES (1, ?) ON DUPLICATE KEY UPDATE config = ?',
+            [config, config]
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+};

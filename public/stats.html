@@ -59,7 +59,47 @@
                 <div class="text-3xl font-orbitron font-bold text-yellow-400" id="stat-rating">0.0</div>
             </div>
         </div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <div class="bg-gradient-to-br from-[#111] to-black p-8 rounded-2xl border-2 border-neon shadow-[0_0_30px_rgba(239,26,45,0.2)] text-center">
+        <div class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2" id="rank-label">RANG : ...</div>
+        <div class="text-7xl font-orbitron font-black text-white my-4" id="rating-display">0.0</div>
+        <div class="text-lg font-bold text-gray-400 mb-6" id="card-user-name">Chargement...</div>
+        
+        <div class="grid grid-cols-3 border-t border-white/10 pt-6 mt-4">
+            <div class="text-center">
+                <div class="text-[9px] text-gray-600 uppercase font-bold">Matchs</div>
+                <div class="text-neon font-orbitron font-bold" id="card-matches">0</div>
+            </div>
+            <div class="text-center border-x border-white/10">
+                <div class="text-[9px] text-gray-600 uppercase font-bold">Série</div>
+                <div class="text-neon font-orbitron font-bold" id="card-streak">0</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[9px] text-gray-600 uppercase font-bold">Level</div>
+                <div class="text-neon font-orbitron font-bold" id="card-lvl">1</div>
+            </div>
+        </div>
+    </div>
 
+    <div class="lg:col-span-2 bg-[#111] p-8 rounded-2xl border border-white/10">
+        <h3 class="font-orbitron font-bold text-white mb-6 flex justify-between items-center">
+            PROGRAMME DE FIDÉLITÉ
+            <span class="text-[10px] text-gray-500 font-normal" id="xp-text">0 / 1000 XP</span>
+        </h3>
+        
+        <div class="mb-8">
+            <div class="flex justify-between text-[10px] font-bold mb-2">
+                <span class="text-neon uppercase tracking-widest" id="next-goal">Calcul en cours...</span>
+            </div>
+            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                <div id="bar-fill" class="bg-neon h-full transition-all duration-1000 shadow-[0_0_15px_#EF1A2D]" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="rewards-roadmap" class="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+            </div>
+    </div>
+</div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <div class="bg-[#111] p-6 rounded-xl border border-white/10 lg:col-span-1 flex flex-col items-center justify-center">

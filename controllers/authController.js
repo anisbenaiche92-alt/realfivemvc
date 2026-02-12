@@ -197,14 +197,23 @@ exports.uploadImages = async (req, res) => {
 };
 
 exports.getPlayerStats = async (req, res) => {
+    // 1. Vérification de la session
     if (!req.session.user) return res.status(401).json({ error: "Non connecté" });
     const userId = req.session.user.id;
 
     try {
+        // 2. Récupérer les réglages de fidélité de l'admin
+        const [lSettings] = await db.query('SELECT config FROM loyalty_settings WHERE id = 1');
+        const config = lSettings.length > 0 
+            ? JSON.parse(lSettings[0].config) 
+            : { coeffMatch: 0.15, coeffStreak: 0.20, rewards: [] };
+
+        // 3. Récupérer l'historique des matchs et les stats de base
         const [rows] = await db.query(`
             SELECT 
                 m.score_home, m.score_away, r.start_time,
-                mp.team_side, mp.goals, mp.assists, mp.rating
+                mp.team_side, mp.goals, mp.assists, mp.rating,
+                mp.vote_rating_bonus
             FROM match_participants mp
             JOIN matches m ON mp.match_id = m.id
             JOIN reservations r ON m.reservation_id = r.id
@@ -217,6 +226,7 @@ exports.getPlayerStats = async (req, res) => {
         let totalRating = 0;
         let history = [];
 
+        // 4. Calcul des performances par match
         rows.forEach(row => {
             let result = 'NUL';
             const myScore = row.team_side === 'A' ? row.score_home : row.score_away;
@@ -231,45 +241,71 @@ exports.getPlayerStats = async (req, res) => {
             }
 
             totalGoals += (row.goals || 0);
-            totalRating += parseFloat(row.rating || 6.0);
+
+            // Note finale du match incluant le bonus de titre (MVP/PIRE)
+            const finalMatchRating = parseFloat(row.rating || 5.0) + parseFloat(row.vote_rating_bonus || 0.0);
+            totalRating += finalMatchRating;
 
             history.push({
                 date: row.start_time,
                 result: statusLabel,
                 score: `${row.score_home} - ${row.score_away}`,
-                myRating: row.rating || 6.0
+                myRating: finalMatchRating.toFixed(1)
             });
         });
 
         const totalMatches = rows.length;
-        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "6.0";
+        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "5.0";
         const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
 
-        const base = parseFloat(avgRating) * 10; 
-        const stats = {
-            atk: Math.min(99, Math.floor(base + (totalGoals * 2))),
-            def: Math.min(99, Math.floor(base - (totalGoals))),
-            phy: Math.min(99, Math.floor(base + Math.random() * 10)),
-            pac: Math.min(99, Math.floor(base + Math.random() * 10)),
-            tec: Math.min(99, Math.floor(base + 5)),
-            pas: Math.min(99, Math.floor(base + 2))
+        // 5. LOGIQUE DE FIDÉLITÉ (LA CARTE)
+        const streak = Math.floor(totalMatches / 5); // 1 point de série tous les 5 matchs
+        const xp = (totalMatches % 5) * 200;       // XP actuel (0 à 1000)
+        const level = Math.floor(totalMatches / 5) + 1; // Niveau actuel
+
+        // Formule dynamique basée sur tes réglages admin
+        let fidelityNote = (1.0 + (totalMatches * config.coeffMatch) + (streak * config.coeffStreak)).toFixed(1);
+        if (fidelityNote > 10.0) fidelityNote = "10.0";
+
+        // Détermination du rang
+        let rank = "RECRUE";
+        if (fidelityNote >= 9.5) rank = "LÉGENDE";
+        else if (fidelityNote >= 7.0) rank = "VÉTÉRAN";
+
+        // 6. Calcul des statistiques radar
+        const baseRadar = parseFloat(avgRating) * 10; 
+        const statsRadar = {
+            atk: Math.min(99, Math.floor(baseRadar + (totalGoals * 2))),
+            def: Math.min(99, Math.floor(baseRadar - (totalGoals))),
+            phy: Math.min(99, Math.floor(baseRadar + Math.random() * 10)),
+            pac: Math.min(99, Math.floor(baseRadar + Math.random() * 10)),
+            tec: Math.min(99, Math.floor(baseRadar + 5)),
+            pas: Math.min(99, Math.floor(baseRadar + 2))
         };
 
+        // 7. Envoi de la réponse complète
         res.json({
             totalMatches,
             winRate,
             totalGoals,
             avgRating,
             history,
-            stats
+            stats: statsRadar,
+            fidelity: {
+                note: fidelityNote,
+                rank: rank,
+                streak: streak,
+                level: level,
+                xp: xp,
+                rewards: config.rewards // Envoie les paliers configurés par l'admin
+            }
         });
 
     } catch (e) {
-        console.error(e);
+        console.error("Erreur getPlayerStats:", e);
         res.status(500).json({ error: "Erreur serveur" });
     }
 };
-
 exports.getUserStats = async (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: "Non connecté" });
     const targetId = req.params.id;
@@ -291,11 +327,11 @@ exports.getUserStats = async (req, res) => {
 
         rows.forEach(r => {
             totalGoals += (r.goals || 0);
-            totalRating += parseFloat(r.rating || 6.0);
+            totalRating += parseFloat(r.rating || 5.0);
         });
 
         const totalMatches = rows.length;
-        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "6.0";
+        const avgRating = totalMatches > 0 ? (totalRating / totalMatches).toFixed(1) : "5.0";
 
         const base = parseFloat(avgRating) * 10;
         const stats = {

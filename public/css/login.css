@@ -4,8 +4,9 @@
             --accent-blue: #2A5475;
         }
         
-        body { background-color: #050505; color: white; overflow: hidden; }
-        
+         body { background-color: #121214 !important; color: white; overflow: hidden; }
+    .ambient-glow { display: none; } /* Supprime le reflet rouge pour un fond uni */
+    
         /* TEXTURE & AMBIANCE */
         .noise-overlay {
             position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
@@ -48,3 +49,6 @@
         .social-btn:hover {
             background: #252525; border-color: var(--accent-blue);
         }
+
+
+    

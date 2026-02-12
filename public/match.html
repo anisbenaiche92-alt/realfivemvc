@@ -35,17 +35,25 @@
         </button>
     </div>
 
-    <div class="flex flex-col items-center justify-center absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+   <div class="flex flex-col items-center justify-center absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+        
         <div class="hidden md:block text-center">
-            <h1 class="font-orbitron font-black text-2xl text-white tracking-tighter leading-none whitespace-nowrap">WAR <span class="text-neon">ROOM</span></h1>
+            <div id="header-main-display">
+                <h1 class="font-orbitron font-black text-2xl text-white tracking-tighter leading-none whitespace-nowrap">WAR <span class="text-neon">ROOM</span></h1>
+            </div>
+            
             <div class="flex items-center justify-center gap-2 mt-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse shadow-neon"></span>
-                <span class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold" id="match-venue">CHARGEMENT...</span>
+                <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse shadow-neon"></span>
+                <span class="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold" id="match-venue">CHARGEMENT...</span>
             </div>
         </div>
+
         <div class="md:hidden flex flex-col items-center pointer-events-auto">
             <div id="countdown-mob" class="font-orbitron font-black text-xl text-white tabular-nums tracking-widest leading-none drop-shadow-neon">--:--</div>
-            <span class="text-[8px] text-gray-500 uppercase font-bold tracking-[0.2em]">CHRONO</span>
+            
+            <div id="score-mob" class="hidden font-orbitron font-black text-xl text-white tracking-widest">0 - 0</div>
+            
+            <span id="label-chrono-mob" class="text-[8px] text-gray-500 uppercase font-bold tracking-[0.2em]">CHRONO</span>
         </div>
     </div>
 
@@ -113,14 +121,21 @@
         </div>
     </div>
 
-        <div id="panel-pitch" class="force-flex-desktop flex-1 relative flex-col items-center justify-center bg-[#050505] w-full h-full p-2 z-10">
-            <div class="stadium-container">
-                <div class="pitch" id="pitchArea">
-                    <div class="line center-circle"></div> <div class="line center-line"></div> <div class="line box-top"></div> <div class="line box-bottom"></div>
-                    <div id="field-players"></div>
-                </div>
-            </div>
+        <div id="panel-pitch" class="force-flex-desktop flex-1 relative flex-col items-center justify-start bg-[#050505] w-full h-full p-2 z-10 overflow-y-auto custom-scroll">
+    
+    <div class="stadium-container shrink-0">
+        <div class="pitch" id="pitchArea">
+            <div class="line center-circle"></div> 
+            <div class="line center-line"></div> 
+            <div class="line box-top"></div> 
+            <div class="line box-bottom"></div>
+            <div id="field-players"></div>
         </div>
+    </div>
+
+    <div id="live-vote-results" class="w-full max-w-4xl mx-auto mt-12 px-4 pb-24"></div>
+
+</div>
 
         <div id="panel-chat" class="mobile-hidden force-flex-desktop w-full md:w-96 hud-panel border-l border-white/5 flex-col h-full bg-[#050505] z-20">
             <div class="h-14 border-b border-white/5 flex items-center px-5 bg-black/40 shrink-0">
@@ -191,7 +206,39 @@
             </div>
         </div>
     </div>
+<div id="scoreModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+    <div class="bg-[#111] border border-white/10 p-6 rounded-2xl w-full max-w-2xl relative shadow-2xl">
+        <button onclick="document.getElementById('scoreModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500">✕</button>
+        <h3 class="font-orbitron font-bold text-xl text-white mb-6 text-center uppercase">Clôturer le Match & XP</h3>
+        
+        <form id="scoreForm" onsubmit="submitFinalScore(event)">
+            <div class="flex justify-center items-center gap-8 mb-8">
+                <div class="text-center">
+                    <label id="label-teamA" class="block text-neon text-[10px] font-black mb-2 tracking-widest">DOMICILE</label>
+                    <input type="number" id="final-scoreA" class="w-20 h-20 bg-white/5 border-2 border-neon/30 text-white text-4xl text-center font-orbitron rounded-xl focus:border-neon outline-none" value="0" min="0">
+                </div>
+                <div class="text-white font-orbitron text-2xl font-black mt-6">VS</div>
+                <div class="text-center">
+                    <label id="label-teamB" class="block text-red-500 text-[10px] font-black mb-2 tracking-widest">EXTÉRIEUR</label>
+                    <input type="number" id="final-scoreB" class="w-20 h-20 bg-white/5 border-2 border-red-500/30 text-white text-4xl text-center font-orbitron rounded-xl focus:border-red-500 outline-none" value="0" min="0">
+                </div>
+            </div>
 
+            <div class="grid grid-cols-2 gap-6 mb-8 max-h-60 overflow-y-auto pr-2 custom-scroll">
+                <div>
+                    <h4 class="text-[10px] text-gray-500 font-bold mb-3 uppercase">Buts Domicile</h4>
+                    <div id="players-list-scoreA" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h4 class="text-[10px] text-gray-500 font-bold mb-3 uppercase">Buts Extérieur</h4>
+                    <div id="players-list-scoreB" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-neon text-black font-black py-4 rounded-xl uppercase tracking-widest hover:bg-white transition">Valider et Distribuer XP</button>
+        </form>
+    </div>
+</div>
     <script src="/js/match.js"></script> 
 </body>
 </html>

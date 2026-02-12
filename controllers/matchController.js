@@ -643,3 +643,156 @@ exports.movePlayer = async (req, res) => {
         res.status(500).json({ error: "Erreur lors du déplacement du joueur" }); 
     }
 };
+
+//score final après match terminé 
+
+exports.updateScoreFull = async (req, res) => {
+    const { matchId, scoreA, scoreB, goalsData } = req.body;
+    
+    try {
+        const [matchInfo] = await db.query(`
+            SELECT r.user_id as creator_id FROM matches m 
+            JOIN reservations r ON m.reservation_id = r.id 
+            WHERE m.id = ?`, [matchId]);
+
+        if (!matchInfo.length) return res.status(404).json({ error: "Match introuvable" });
+
+        // Mise à jour du match en PLAYED
+        await db.query('UPDATE matches SET score_home = ?, score_away = ?, status = "PLAYED" WHERE id = ?', [scoreA, scoreB, matchId]);
+
+        let winningSide = scoreA > scoreB ? 'A' : (scoreB > scoreA ? 'B' : null);
+        const [participants] = await db.query('SELECT user_id, team_side FROM match_participants WHERE match_id = ?', [matchId]);
+
+        for (const p of participants) {
+            const goals = goalsData[p.user_id] || 0;
+            let xpGained = 0;
+
+            // --- LOGIQUE XP ---
+            if (winningSide === null) {
+                xpGained = 0; // Match Nul
+            } else if (p.team_side === winningSide) {
+                xpGained = 20; // Victoire
+            } else {
+                xpGained = -20; // Défaite
+            }
+
+            xpGained += (goals * 5); // +5 XP par but
+
+            // --- LOGIQUE NOTE (Base 5.0) ---
+            // On ajuste la note selon l'XP (Ex: +20 XP monte la note de 1pt, -20 XP la descend de 1pt)
+            let matchRating = 5.0 + (xpGained / 20); 
+            matchRating = Math.max(0, Math.min(10, matchRating)); // On reste entre 0 et 10
+
+            // Mise à jour match_participants (buts + note)
+            await db.query('UPDATE match_participants SET goals = ?, rating = ? WHERE match_id = ? AND user_id = ?', [goals, matchRating, matchId, p.user_id]);
+
+            // Mise à jour XP globale du joueur
+            await db.query('UPDATE users SET loyalty_points = loyalty_points + ? WHERE id = ?', [xpGained, p.user_id]);
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+
+
+
+exports.submitVote = async (req, res) => {
+    const { matchId, targetId, category } = req.body;
+    const voterId = req.session.user.id;
+
+    // 1. Sécurité : Pas de vote pour soi-même
+    if (voterId === parseInt(targetId)) {
+        return res.status(400).json({ error: "Interdit de voter pour soi-même" });
+    }
+
+    try {
+        // 2. Enregistrement du vote dans la table match_votes
+        await db.query(
+            'INSERT INTO match_votes (match_id, voter_id, target_id, category) VALUES (?, ?, ?, ?)',
+            [matchId, voterId, targetId, category]
+        );
+
+        // 3. RECALCUL DES TITRES EN TEMPS RÉEL (Transfert des points)
+        // Cette fonction interne va attribuer les points uniquement aux leaders actuels
+        await updateMatchWinners(matchId);
+
+        res.json({ success: true });
+
+    } catch (e) {
+        if (e.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: "Tu as déjà voté pour ce joueur sur ce match" });
+        }
+        console.error("Erreur vote:", e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+
+// --- FONCTION DE GESTION DES LEADERS (TRANSFERT DE POINTS) ---
+async function updateMatchWinners(matchId) {
+    try {
+        // A. On remet tout le monde à zéro pour ce match avant le recalcul
+        // On utilise les colonnes spécifiques pour ne pas écraser la note de base
+        await db.query(`
+            UPDATE match_participants 
+            SET vote_rating_bonus = 0, vote_xp_bonus = 0 
+            WHERE match_id = ?`, 
+            [matchId]
+        );
+
+        // B. ÉLECTION DU MVP (Le plus de votes, aléatoire si égalité)
+        const [mvp] = await db.query(`
+            SELECT target_id FROM match_votes 
+            WHERE match_id = ? AND category = 'mvp' 
+            GROUP BY target_id 
+            ORDER BY COUNT(*) DESC, RAND() 
+            LIMIT 1`, 
+            [matchId]
+        );
+
+        if (mvp.length > 0) {
+            // Le gagnant exclusif prend +0.5 sur sa note et +15 XP
+            await db.query(`
+                UPDATE match_participants 
+                SET vote_rating_bonus = 0.5, vote_xp_bonus = 15 
+                WHERE match_id = ? AND user_id = ?`, 
+                [matchId, mvp[0].target_id]
+            );
+        }
+
+        // C. ÉLECTION DU PIRE (Le plus de votes, aléatoire si égalité)
+        const [worst] = await db.query(`
+            SELECT target_id FROM match_votes 
+            WHERE match_id = ? AND category = 'worst' 
+            GROUP BY target_id 
+            ORDER BY COUNT(*) DESC, RAND() 
+            LIMIT 1`, 
+            [matchId]
+        );
+
+        if (worst.length > 0) {
+            // Le "pire" exclusif prend -0.3 sur sa note et -5 XP
+            await db.query(`
+                UPDATE match_participants 
+                SET vote_rating_bonus = -0.3, vote_xp_bonus = -5 
+                WHERE match_id = ? AND user_id = ?`, 
+                [matchId, worst[0].target_id]
+            );
+        }
+    } catch (err) {
+        console.error("Erreur lors de l'actualisation des gagnants:", err);
+    }
+}
+exports.getVoteResults = async (req, res) => {
+    const { id } = req.params; // ID du match
+    try {
+        const [votes] = await db.query(`
+            SELECT target_id, category, COUNT(*) as count 
+            FROM match_votes 
+            WHERE match_id = ? 
+            GROUP BY target_id, category`, [id]);
+        res.json(votes);
+    } catch (e) { res.status(500).json([]); }
+};

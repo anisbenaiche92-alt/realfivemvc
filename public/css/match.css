@@ -185,3 +185,41 @@ body {
         display: flex !important; 
     }
 }
+
+
+
+/* Style pour les encadrés des gagnants (Leaders) */
+.winner-box-match {
+    background: #111;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    min-width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.winner-box-match span {
+    display: block;
+    font-size: 9px;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.winner-box-match strong {
+    color: #EF1A2D; /* Ton rouge néon */
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+}
+
+/* Style pour le tableau de stats */
+.live-dashboard-match {
+    box-shadow: 0 0 30px rgba(239, 26, 45, 0.05);
+}
+
+.live-dashboard-match table th {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+}

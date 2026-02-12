@@ -180,8 +180,8 @@ const calendarManager = {
     locale: 'fr',
     headerToolbar: false,
     slotDuration: '00:30:00', // Durée des créneaux
-    slotMinTime: '08:00:00',   // Heure de début
-    slotMaxTime: '23:59:00',   // Heure de fin
+    slotMinTime: '09:00:00',   // Heure de début
+    slotMaxTime: '25:00:00',   // Heure de fin
     allDaySlot: false,
     editable: true,
     selectable: true,
@@ -1054,7 +1054,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // if(viewId === 'marketing') marketingManager.load();
 
 // A AJOUTER COMME NOUVEL OBJET MANAGER
+
 const marketingManager = {
+    // 1. CHARGEMENT DES CODES PROMOS
     load: async () => {
         try {
             const res = await fetch('/api/admin/marketing/promos');
@@ -1067,85 +1069,115 @@ const marketingManager = {
             }
 
             tbody.innerHTML = promos.map(p => {
-    // LOGIQUE D'AFFICHAGE INTELLIGENTE
-    let valueDisplay, tagColor;
+                let valueDisplay, tagColor;
+                if (p.discount_type === 'PERCENT') {
+                    valueDisplay = `-${p.value}%`;
+                    tagColor = 'text-blue-400 bg-blue-400/10';
+                } else if (p.discount_type === 'HOURLY_FIXED') {
+                    valueDisplay = `${p.value}€ /H`; 
+                    tagColor = 'text-purple-400 bg-purple-400/10 border border-purple-500/20';
+                } else {
+                    valueDisplay = `-${p.value}€`;
+                    tagColor = 'text-[#4DFF99] bg-[#4DFF99]/10';
+                }
 
-    if (p.discount_type === 'PERCENT') {
-        valueDisplay = `-${p.value}%`;
-        tagColor = 'text-blue-400 bg-blue-400/10';
-    } else if (p.discount_type === 'HOURLY_FIXED') {
-        // C'est ici qu'on gère le forfait 5€
-        valueDisplay = `${p.value}€ /H`; 
-        tagColor = 'text-purple-400 bg-purple-400/10 border border-purple-500/20';
-    } else {
-        valueDisplay = `-${p.value}€`;
-        tagColor = 'text-[#4DFF99] bg-[#4DFF99]/10';
-    }
-
-    return `
-    <tr class="hover:bg-white/5 transition border-b border-white/5 last:border-0">
-        <td class="p-4">
-            <span class="font-bold text-white font-mono tracking-wider bg-white/5 px-3 py-1 rounded border border-white/10 select-all">${p.code}</span>
-        </td>
-        <td class="p-4">
-            <span class="text-xs font-bold px-2 py-1 rounded ${tagColor}">${valueDisplay}</span>
-        </td>
-        <td class="p-4 text-xs text-gray-300">
-            <span class="${p.current_uses >= p.max_uses ? 'text-red-500 font-bold' : ''}">${p.current_uses}</span> 
-            <span class="text-gray-600">/</span> 
-            ${p.max_uses}
-        </td>
-        <td class="p-4 text-xs text-gray-400">
-            ${new Date(p.expires_at).toLocaleDateString('fr-FR')}
-        </td>
-        <td class="p-4 text-right">
-            <button onclick="marketingManager.delete(${p.id})" class="w-8 h-8 rounded bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition flex items-center justify-center ml-auto">
-                <i class="fa-solid fa-trash text-xs"></i>
-            </button>
-        </td>
-    </tr>
-`}).join('');
+                return `
+                <tr class="hover:bg-white/5 transition border-b border-white/5 last:border-0">
+                    <td class="p-4"><span class="font-bold text-white font-mono bg-white/5 px-3 py-1 rounded border border-white/10">${p.code}</span></td>
+                    <td class="p-4"><span class="text-xs font-bold px-2 py-1 rounded ${tagColor}">${valueDisplay}</span></td>
+                    <td class="p-4 text-xs text-gray-300"><span>${p.current_uses}</span> / ${p.max_uses}</td>
+                    <td class="p-4 text-xs text-gray-400">${new Date(p.expires_at).toLocaleDateString('fr-FR')}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="marketingManager.delete(${p.id})" class="w-8 h-8 rounded bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition flex items-center justify-center ml-auto">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
         } catch(e) { console.error("Erreur chargement promos", e); }
     },
 
-    create: async () => {
-        const code = document.getElementById('promo-code').value.toUpperCase();
-        const type = document.getElementById('promo-type').value;
-        const value = document.getElementById('promo-value').value;
-        const max_uses = document.getElementById('promo-uses').value;
-        const expires_at = document.getElementById('promo-date').value;
+ // 2. CRÉATION D'UN CODE PROMO 
+create: async () => {
+    const code = document.getElementById('promo-code').value.toUpperCase();
+    const type = document.getElementById('promo-type').value;
+    const value = document.getElementById('promo-value').value;
+    const max_uses = document.getElementById('promo-uses').value;
+    const starts_at = document.getElementById('promo-start').value; // Nouveau
+    const expires_at = document.getElementById('promo-date').value;
 
-        if(!code || !value || !max_uses || !expires_at) {
-            return alert("Veuillez remplir tous les champs.");
+    // Validation : on vérifie que la date de début est aussi présente
+    if(!code || !value || !max_uses || !starts_at || !expires_at) {
+        return alert("Veuillez remplir tous les champs, y compris la date de début.");
+    }
+
+    try {
+        const res = await fetch('/api/admin/marketing/promos', {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            // On envoie starts_at dans le corps de la requête
+            body: JSON.stringify({ code, type, value, max_uses, starts_at, expires_at })
+        });
+        const data = await res.json();
+        if(data.success) {
+            modals.close('promo');
+            marketingManager.load();
+            utils.toast('Succès', 'Code Promo créé !');
         }
+    } catch(e) { 
+        alert("Erreur serveur"); 
+    }
+},
 
-        try {
-            const res = await fetch('/api/admin/marketing/promos', {
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ code, type, value, max_uses, expires_at })
-            });
-            
-            const data = await res.json();
-            if(data.success) {
-                modals.close('promo');
-                marketingManager.load();
-                // Reset form
-                document.getElementById('promo-code').value = '';
-                document.getElementById('promo-value').value = '';
-                utils.toast('Succès', 'Code Promo créé !');
-            } else {
-                alert("Erreur: " + (data.error || "Impossible de créer le code"));
-            }
-        } catch(e) { alert("Erreur serveur"); }
-    },
-
+    // 3. SUPPRESSION D'UN CODE PROMO
     delete: async (id) => {
         if(!confirm("Supprimer définitivement ce code promo ?")) return;
         await fetch(`/api/admin/marketing/promos/${id}`, { method: 'DELETE' });
         marketingManager.load();
+    },
+
+    // 4. AJOUTER UNE LIGNE DE PALIER (FIDÉLITÉ)
+    addRewardRow: (threshold = "", label = "") => {
+        const container = document.getElementById('loyalty-rewards-container');
+        const div = document.createElement('div');
+        div.className = "flex gap-2 items-center reward-config-row animate-fade-in";
+        div.innerHTML = `
+            <input type="number" placeholder="Qté" class="w-20 input-field text-center font-bold" value="${threshold}">
+            <input type="text" placeholder="Récompense..." class="flex-1 input-field text-sm" value="${label}">
+            <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-500 p-2 transition">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    },
+
+    // 5. SAUVEGARDER LA CONFIGURATION DE FIDÉLITÉ
+    saveLoyaltySettings: async () => {
+        const coeffMatch = document.getElementById('loyalty-coeff-match').value;
+        const coeffStreak = document.getElementById('loyalty-coeff-streak').value;
+        
+        const rows = document.querySelectorAll('.reward-config-row');
+        const rewards = Array.from(rows).map(row => {
+            const inputs = row.querySelectorAll('input');
+            return {
+                threshold: parseInt(inputs[0].value),
+                label: inputs[1].value
+            };
+        }).filter(r => !isNaN(r.threshold) && r.label !== "");
+
+        try {
+            utils.loading(true);
+            const res = await fetch('/api/admin/loyalty/settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ coeffMatch, coeffStreak, rewards })
+            });
+            if(res.ok) utils.toast('Succès', 'Configuration mise à jour !');
+        } catch(e) { utils.toast('Erreur', 'Impossible de sauvegarder'); }
+        utils.loading(false);
     }
 };
+
 
 // ==========================================
 // SETTINGS MANAGER
