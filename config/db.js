@@ -12,9 +12,6 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  ssl: {
-    rejectUnauthorized: false // À remplacer par true en production avec le CA
-  },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -31,3 +28,4 @@ db.getConnection()
   });
 
 module.exports = db;
+
