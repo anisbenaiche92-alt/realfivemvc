@@ -55,6 +55,8 @@ router.post('/api/match/update-score-full', matchController.updateScoreFull);
 router.post('/api/match/vote', matchController.submitVote);
 router.post('/api/match/update-names', matchController.updateTeamNames);
 router.post('/api/match/move-player', matchController.movePlayer);
+router.get('/match-roles', matchController.getPublicVoteRoles);
+router.get('/api/match-roles', matchController.getPublicVoteRoles);
 
 // --- SOCIAL MATCH ---
 router.post('/api/match/invite-friend', matchController.inviteFriend);

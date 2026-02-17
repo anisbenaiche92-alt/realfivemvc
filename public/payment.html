@@ -6,94 +6,93 @@
     <title>Paiement | RealFive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
         tailwind.config = { theme: { extend: { colors: { 
-    neon: '#EF1A2D', // Vrai rouge sportif (Scuderia Ferrari)
-    anthracite: '#1F2937', // Gris anthracite pur
-    black: '#080808', 
-    sidebar: '#0C0C0C' 
-}, fontFamily: { orbitron: ['Orbitron'], inter: ['Inter'] } } } }
+            neon: '#EF1A2D', anthracite: '#1F2937', black: '#080808', sidebar: '#0C0C0C' 
+        }, fontFamily: { orbitron: ['Orbitron'], inter: ['Inter'] } } } }
     </script>
     <link rel="stylesheet" href="/css/payment.css">
 </head>
 <body class="h-screen flex items-center justify-center font-inter bg-[url('image/reservation.jpg')] bg-cover bg-center bg-no-repeat">
     
-    <div class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 bg-black/95 backdrop-blur-sm"></div>
 
-    <div class="relative w-full max-w-lg bg-[#111] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4 animate-fade-in">
+    <div class="relative w-full max-w-lg bg-[#111] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4">
         
         <div class="text-center mb-8">
-            <h1 class="font-orbitron font-black text-2xl sm:text-3xl text-white mb-2">CAISSE <span class="text-neon">REALFIVE</span></h1>
-            <p class="text-gray-400 text-sm">Finalise ton inscription pour entrer sur le terrain.</p>
-        </div>
-
-        <div class="bg-white/5 rounded-xl p-4 mb-6 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-center sm:text-left">
-                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">MATCH</div>
-                <div class="font-orbitron text-lg text-white font-bold" id="match-code">...</div>
-                <div class="text-xs text-gray-400 mt-1" id="match-date">...</div>
-            </div>
-            <div class="text-center sm:text-right">
-                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">TOTAL À PAYER</div>
-                <div class="font-orbitron text-2xl text-neon font-black" id="amount-due">-- €</div>
+            <h1 class="font-orbitron font-black text-2xl text-white mb-1 uppercase tracking-tighter">Caisse <span class="text-neon">RealFive</span></h1>
+            <div class="flex justify-center gap-2 mt-4">
+                <div id="dot-1" class="w-10 h-1.5 bg-neon rounded-full transition-all duration-500"></div>
+                <div id="dot-2" class="w-10 h-1.5 bg-white/10 rounded-full transition-all duration-500"></div>
+                <div id="dot-3" class="w-10 h-1.5 bg-white/10 rounded-full transition-all duration-500"></div>
             </div>
         </div>
 
-        <div class="mb-6">
-            <div class="flex flex-col sm:flex-row gap-2 bg-black/50 p-1 rounded-lg border border-white/10 focus-within:border-neon transition">
-                <div class="flex items-center pl-3 text-gray-500">
-                    <i class="fa-solid fa-tag"></i>
+        <div id="step-1" class="space-y-6 animate-fade-in">
+            <div class="bg-white/5 rounded-xl p-5 border border-white/5 text-center">
+                <label class="block text-gray-500 text-[10px] font-black uppercase mb-4 tracking-widest">Combien de places payez-vous ?</label>
+                <div class="flex items-center justify-between bg-black rounded-xl p-3 border border-white/10 max-w-[200px] mx-auto">
+                    <button onclick="updateSlots(-1)" class="w-10 h-10 text-2xl hover:text-neon transition">−</button>
+                    <input type="number" id="slots-count" value="1" readonly class="bg-transparent text-center font-orbitron font-bold text-3xl w-16 outline-none">
+                    <button onclick="updateSlots(1)" class="w-10 h-10 text-2xl hover:text-neon transition">+</button>
                 </div>
-                <input type="text" id="promo-input" placeholder="CODE PROMO..." class="flex-1 bg-transparent text-white font-orbitron text-sm uppercase outline-none placeholder-gray-600 py-2 px-2">
-                <button onclick="applyPromo()" class="bg-white/10 hover:bg-neon hover:text-black text-white px-4 py-2 rounded font-bold text-xs transition uppercase whitespace-nowrap">
-                    Appliquer
-                </button>
+                <p class="text-[10px] text-gray-500 mt-6 italic">Le reste des places pourra être payé par tes amis via le Code Match.</p>
             </div>
-            <div id="promo-msg" class="text-[10px] mt-2 hidden text-right font-bold"></div>
+            <button onclick="goToStep(2)" class="w-full bg-white text-black font-orbitron font-black py-5 rounded-xl uppercase tracking-widest hover:bg-neon hover:text-white transition-all">Suivant</button>
         </div>
 
-        <div id="payment-methods" class="space-y-3 mb-8">
-            <div class="payment-option rounded-lg p-4 flex items-center justify-between group disabled opacity-50 cursor-not-allowed bg-white/5 border border-transparent">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white/10 p-2 rounded text-xl">💳</div>
-                    <div>
-                        <div class="font-bold text-sm text-gray-400">Carte Bancaire</div>
-                        <div class="text-[10px] text-gray-600">Bientôt disponible</div>
+        <div id="step-2" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white/5 rounded-xl p-6 border border-white/5">
+                <label class="block text-neon text-[10px] font-black uppercase mb-3 tracking-widest">Ton numéro de mobile</label>
+                <input type="tel" id="user-phone" placeholder="06 00 00 00 00" class="w-full bg-black border border-white/10 rounded-xl p-5 text-white font-mono text-2xl text-center tracking-[0.3em] focus:border-neon outline-none transition-colors">
+                <p class="text-[10px] text-gray-500 mt-4 text-center">Obligatoire pour recevoir tes accès et ton Code Match par SMS.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="goToStep(1)" class="flex-1 bg-white/5 text-gray-400 font-bold py-5 rounded-xl uppercase text-xs hover:bg-white/10 transition">Retour</button>
+                <button onclick="goToStep(3)" class="flex-[2] bg-white text-black font-orbitron font-black py-5 rounded-xl uppercase tracking-widest hover:bg-neon hover:text-white transition-all">Vérifier le prix</button>
+            </div>
+        </div>
+
+        <div id="step-3" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex justify-between items-center">
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Récapitulatif</div>
+                    <div class="text-xs text-white font-bold" id="summary-slots">Pour 1 place</div>
+                </div>
+                <div class="text-3xl font-orbitron font-black text-neon" id="final-price-display">0.00 €</div>
+            </div>
+            
+            <div id="payment-methods" class="space-y-3">
+                <div class="opacity-40 grayscale rounded-xl p-4 flex items-center justify-between border border-white/5 bg-white/5 cursor-not-allowed">
+                    <div class="flex items-center gap-3"><span class="text-xl">💳</span><span class="text-sm font-bold text-gray-400">Carte Bancaire</span></div>
+                    <span class="text-[8px] border border-gray-700 px-2 py-1 rounded text-gray-600">BIENTÔT</span>
+                </div>
+                <div class="opacity-40 grayscale rounded-xl p-4 flex items-center justify-between border border-white/5 bg-white/5 cursor-not-allowed">
+                    <div class="flex items-center gap-3"><span class="text-xl">🅿️</span><span class="text-sm font-bold text-gray-400">PayPal</span></div>
+                    <span class="text-[8px] border border-gray-700 px-2 py-1 rounded text-gray-600">BIENTÔT</span>
+                </div>
+                <div id="btn-cash" class="rounded-xl p-4 flex items-center justify-between border border-neon/30 bg-neon/5 cursor-pointer ring-1 ring-neon/20">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-neon/20 p-2 rounded-lg text-xl">💵</div>
+                        <div>
+                            <div class="font-bold text-sm text-white uppercase">Espèces / Sur place</div>
+                            <div class="text-[9px] text-neon uppercase font-black">Réservation instantanée</div>
+                        </div>
                     </div>
+                    <div class="w-5 h-5 rounded-full bg-neon flex items-center justify-center shadow-[0_0_15px_#EF1A2D]"><i class="fa-solid fa-check text-[10px] text-white"></i></div>
                 </div>
-                <div class="w-4 h-4 rounded-full border border-gray-600"></div>
             </div>
 
-            <div class="payment-option rounded-lg p-4 flex items-center justify-between group disabled opacity-50 cursor-not-allowed bg-white/5 border border-transparent">
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#003087]/20 p-2 rounded text-xl text-[#003087]">🅿️</div>
-                    <div>
-                        <div class="font-bold text-sm text-gray-400">PayPal</div>
-                        <div class="text-[10px] text-gray-600">Bientôt disponible</div>
-                    </div>
-                </div>
-                <div class="w-4 h-4 rounded-full border border-gray-600"></div>
-            </div>
-
-            <div onclick="selectMethod('cash')" id="btn-cash" class="payment-option rounded-lg p-4 flex items-center justify-between border border-neon/30 bg-neon/5 cursor-pointer hover:bg-neon/10 transition">
-                <div class="flex items-center gap-3">
-                    <div class="bg-neon/20 p-2 rounded text-xl">💵</div>
-                    <div>
-                        <div class="font-bold text-sm text-white">Espèces / Sur Place</div>
-                        <div class="text-[10px] text-neon">Paiement validé immédiatement</div>
-                    </div>
-                </div>
-                <div class="w-4 h-4 rounded-full border border-neon bg-neon shadow-[0_0_10px_#4DFF99]"></div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="goToStep(2)" class="bg-white/5 text-gray-400 p-5 rounded-xl hover:bg-white/10 transition"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="pay-btn" onclick="processPayment()" class="flex-1 bg-neon text-white font-orbitron font-black py-5 rounded-xl uppercase tracking-widest shadow-[0_10px_30px_rgba(239,26,45,0.3)] hover:scale-[1.02] transition-all">Confirmer le match</button>
             </div>
         </div>
 
-        <button id="pay-btn" onclick="processPayment()" class="w-full bg-neon text-black font-orbitron font-black text-base sm:text-lg py-3 sm:py-4 rounded-lg uppercase tracking-widest hover:scale-[1.02] transition shadow-lg shadow-neon/20">
-            VALIDER & REJOINDRE
-        </button>
-        
-        <p class="text-center text-[10px] text-gray-600 mt-4">En validant, tu acceptes les CGV de RealFive Arena.</p>
+        <p class="text-center text-[9px] text-gray-700 mt-8 uppercase font-bold tracking-[0.2em]">RealFive Arena • Player Experience</p>
     </div>
-        
+
     <script src="/js/payment.js"></script>
 </body>
 </html>

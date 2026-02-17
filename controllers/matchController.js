@@ -44,40 +44,58 @@ exports.getMercato = async (req, res) => {
         res.json([]); 
     }
 };
-// --- 2. CRÉATION & PAIEMENT ---
+// --- 2. CRÉATION & PAIEMENT COMPLET (VERSION FINALE) ---
 exports.createAndPay = async (req, res) => {
-    const { terrainId, date, time, duration, paymentMode, method } = req.body;
+    const { terrainId, date, time, duration, slotsToPay, phone } = req.body;
+    const userId = req.session.user.id;
+
     try {
+        // 1. Mise à jour du téléphone dans la table users
+        if (phone) {
+            await db.query('UPDATE users SET phone = ? WHERE id = ?', [phone, userId]);
+        }
+
         const start = `${date} ${time}:00`;
         const dur = parseInt(duration) || 1;
         const end = new Date(new Date(start).getTime() + (dur * 60 * 60 * 1000)).toISOString().slice(0, 19).replace('T', ' ');
 
-        const [conflicts] = await db.query(`SELECT id FROM reservations WHERE terrain_id = ? AND status != 'CANCELLED' AND ((start_time < ? AND end_time > ?))`, [terrainId, end, start]);
+        // 2. Vérification des créneaux
+        const [conflicts] = await db.query(
+            `SELECT id FROM reservations WHERE terrain_id = ? AND status != 'CANCELLED' AND ((start_time < ? AND end_time > ?))`, 
+            [terrainId, end, start]
+        );
         if (conflicts.length > 0) return res.json({ success: false, error: "Créneau indisponible" });
 
-        const [terrain] = await db.query('SELECT hourly_rate, name FROM terrains WHERE id = ?', [terrainId]);
+        const [terrain] = await db.query('SELECT hourly_rate FROM terrains WHERE id = ?', [terrainId]);
         const basePrice = terrain[0].hourly_rate * dur;
-        let slotsPaid = paymentMode === 'FULL' ? 10 : 1;
+        const finalSlotsPaid = parseInt(slotsToPay) || 1;
 
+        // 3. Insertion de la réservation
         const [resRes] = await db.query(
-            `INSERT INTO reservations (user_id, terrain_id, start_time, end_time, total_price, status, payment_mode, slots_paid) VALUES (?, ?, ?, ?, ?, 'CONFIRMED', ?, ?)`,
-            [req.session.user.id, terrainId, start, end, basePrice, paymentMode, slotsPaid]
+            `INSERT INTO reservations (user_id, terrain_id, start_time, end_time, total_price, status, payment_status, slots_paid) 
+             VALUES (?, ?, ?, ?, ?, 'CONFIRMED', 'PAID', ?)`,
+            [userId, terrainId, start, end, basePrice, finalSlotsPaid]
         );
         
-        const matchCode = 'M-' + Math.floor(1000 + Math.random() * 9000);
-        const [resMatch] = await db.query(`INSERT INTO matches (reservation_id, status, match_code) VALUES (?, 'SCHEDULED', ?)`, [resRes.insertId, matchCode]);
+        // 4. GÉNÉRATION DU MATCH (Sans creator_id car la colonne n'existe pas dans ta BDD)
+        const matchCode = 'M-' + Math.floor(100000 + Math.random() * 900000);
+        const [resMatch] = await db.query(
+            `INSERT INTO matches (reservation_id, status, match_code) VALUES (?, 'SCHEDULED', ?)`, 
+            [resRes.insertId, matchCode]
+        );
         const matchId = resMatch.insertId;
 
-        await db.query(`INSERT INTO match_participants (match_id, user_id, team_side, has_paid) VALUES (?, ?, 'A', 1)`, [matchId, req.session.user.id]);
+        // 5. Ajout du capitaine aux participants
+        await db.query(
+            `INSERT INTO match_participants (match_id, user_id, team_side, has_paid) VALUES (?, ?, 'A', 1)`, 
+            [matchId, userId]
+        );
 
-        const [u] = await db.query('SELECT email FROM users WHERE id = ?', [req.session.user.id]);
-        if (u.length) {
-            const matchLink = `http://localhost:3000/match.html?id=${matchId}`;
-            await sendEmail(u[0].email, "Réservation Confirmée", "TERRAIN RÉSERVÉ !", `Code Match: <b>${matchCode}</b>`, matchLink, "VOIR MA RÉSERVATION");
-        }
-
-        res.json({ success: true, matchId: matchId });
-    } catch (e) { console.error(e); res.status(500).json({ error: "Erreur création" }); }
+        res.json({ success: true, matchId: matchId, code: matchCode });
+    } catch (e) { 
+        console.error("Crash createAndPay:", e); 
+        res.status(500).json({ error: "Erreur lors de la création du match" }); 
+    }
 };
 
 // --- 3. PAIEMENT & JOIN ---
@@ -731,59 +749,36 @@ exports.submitVote = async (req, res) => {
 };
 
 // --- FONCTION DE GESTION DES LEADERS (TRANSFERT DE POINTS) ---
+
 async function updateMatchWinners(matchId) {
     try {
-        // A. On remet tout le monde à zéro pour ce match avant le recalcul
-        // On utilise les colonnes spécifiques pour ne pas écraser la note de base
-        await db.query(`
-            UPDATE match_participants 
-            SET vote_rating_bonus = 0, vote_xp_bonus = 0 
-            WHERE match_id = ?`, 
-            [matchId]
-        );
+        // 1. On remet les compteurs à zéro pour ce match
+        await db.query('UPDATE match_participants SET vote_rating_bonus = 0, vote_xp_bonus = 0 WHERE match_id = ?', [matchId]);
 
-        // B. ÉLECTION DU MVP (Le plus de votes, aléatoire si égalité)
-        const [mvp] = await db.query(`
-            SELECT target_id FROM match_votes 
-            WHERE match_id = ? AND category = 'mvp' 
-            GROUP BY target_id 
-            ORDER BY COUNT(*) DESC, RAND() 
-            LIMIT 1`, 
-            [matchId]
-        );
+        // 2. On récupère les rôles et récompenses que TU as créés dans ton dashboard
+        const [roles] = await db.query('SELECT category_key, xp_bonus, rating_bonus FROM vote_roles_config');
 
-        if (mvp.length > 0) {
-            // Le gagnant exclusif prend +0.5 sur sa note et +15 XP
-            await db.query(`
-                UPDATE match_participants 
-                SET vote_rating_bonus = 0.5, vote_xp_bonus = 15 
-                WHERE match_id = ? AND user_id = ?`, 
-                [matchId, mvp[0].target_id]
+        // 3. On boucle sur chaque rôle pour trouver le gagnant et appliquer TES paramètres
+        for (const role of roles) {
+            const [winner] = await db.query(`
+                SELECT target_id FROM match_votes 
+                WHERE match_id = ? AND category = ? 
+                GROUP BY target_id ORDER BY COUNT(*) DESC, RAND() LIMIT 1`, 
+                [matchId, role.category_key]
             );
-        }
 
-        // C. ÉLECTION DU PIRE (Le plus de votes, aléatoire si égalité)
-        const [worst] = await db.query(`
-            SELECT target_id FROM match_votes 
-            WHERE match_id = ? AND category = 'worst' 
-            GROUP BY target_id 
-            ORDER BY COUNT(*) DESC, RAND() 
-            LIMIT 1`, 
-            [matchId]
-        );
-
-        if (worst.length > 0) {
-            // Le "pire" exclusif prend -0.3 sur sa note et -5 XP
-            await db.query(`
-                UPDATE match_participants 
-                SET vote_rating_bonus = -0.3, vote_xp_bonus = -5 
-                WHERE match_id = ? AND user_id = ?`, 
-                [matchId, worst[0].target_id]
-            );
+            if (winner.length > 0) {
+                // On applique les gains d'XP et de Note enregistrés dans la BDD
+                await db.query(`
+                    UPDATE match_participants 
+                    SET vote_rating_bonus = vote_rating_bonus + ?, 
+                        vote_xp_bonus = vote_xp_bonus + ? 
+                    WHERE match_id = ? AND user_id = ?`, 
+                    [role.rating_bonus, role.xp_bonus, matchId, winner[0].target_id]
+                );
+            }
         }
-    } catch (err) {
-        console.error("Erreur lors de l'actualisation des gagnants:", err);
-    }
+    } catch (err) { console.error("Erreur recalcul dynamique:", err); }
 }
 exports.getVoteResults = async (req, res) => {
     const { id } = req.params; // ID du match
@@ -795,4 +790,14 @@ exports.getVoteResults = async (req, res) => {
             GROUP BY target_id, category`, [id]);
         res.json(votes);
     } catch (e) { res.status(500).json([]); }
+};
+
+// Permet aux joueurs de voir les trophées disponibles pour voter
+exports.getPublicVoteRoles = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT label, category_key FROM vote_roles_config');
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json({ error: "Erreur rôles" });
+    }
 };

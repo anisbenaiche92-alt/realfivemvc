@@ -1,31 +1,24 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 
-// Vérification explicite que les variables sont chargées
-if (!process.env.DB_HOST) {
-  console.error('❌ ERREUR FATALE : DB_HOST non défini');
-  process.exit(1);
-}
-
 const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME, // <--- C'est ici qu'il choisit la base
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-// Test de connexion
 db.getConnection()
-  .then(conn => {
-    console.log(`✅ Connecté à la base de données : ${process.env.DB_NAME} sur ${process.env.DB_HOST}`);
-    conn.release();
-  })
-  .catch(err => {
-    console.error('❌ Erreur de connexion BDD :', err);
-  });
+    .then(conn => {
+        // 👇 AJOUTE CETTE LIGNE POUR VOIR LE NOM DE LA BASE 👇
+        console.log(`✅ Connecté à la Base de Données : ${process.env.DB_NAME}`);
+        conn.release();
+    })
+    .catch(err => {
+        console.error("❌ Erreur de connexion BDD :", err);
+    });
 
 module.exports = db;
-

@@ -27,4 +27,7 @@ router.get('/api/stats/user/:id', playerController.getUserStats);
 //code promo
 router.post('/api/payment/verify-promo', playerController.verifyPromo);
 
+
+// On ajoute /api/ pour être cohérent avec le reste
+router.get('/api/slots', playerController.getAvailableSlots);
 module.exports = router;

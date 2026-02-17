@@ -326,3 +326,96 @@ exports.verifyPromo = async (req, res) => {
         res.status(500).json({ valid: false, error: "Erreur serveur" });
     }
 };
+
+// À ajouter à la fin de playerController.js
+// DANS playerController.js
+
+// DANS playerController.js
+
+// DANS playerController.js
+// DANS playerController.js
+
+// DANS playerController.js
+// DANS playerController.js
+exports.getAvailableSlots = async (req, res) => {
+    const { terrainId, date, duration } = req.query; // duration est 1, 1.5 ou 2
+    const nbPlayers = 10;
+
+    try {
+        // 1. On récupère le terrain ET les réglages d'heures pleines du complexe
+        const [rows] = await db.query(`
+            SELECT t.*, c.open_time, c.close_time, c.peak_start, c.peak_end 
+            FROM terrains t 
+            JOIN complexes c ON t.complex_id = c.id 
+            WHERE t.id = ?`, [terrainId]);
+
+        if (!rows.length) return res.json([]);
+        const t = rows[0];
+
+        // 2. Gestion des objets Date et de la fermeture après minuit (ex: 01:00)
+        let cursor = new Date(`${date}T${t.open_time}`);
+        let closeTime = new Date(`${date}T${t.close_time}`);
+        if (closeTime <= cursor) {
+            closeTime.setDate(closeTime.getDate() + 1);
+        }
+
+        // 3. Récupération des réservations existantes pour vérifier les conflits
+        const [booked] = await db.query(
+            "SELECT start_time, end_time FROM reservations WHERE terrain_id = ? AND DATE(start_time) = ? AND status != 'CANCELLED'",
+            [terrainId, date]
+        );
+
+        const slots = [];
+        const isWeekend = ([0, 6].includes(new Date(date).getDay()));
+
+        // 4. Boucle de génération des créneaux (par pas de 30 min)
+        while (cursor < closeTime) {
+            let start = new Date(cursor);
+            let end = new Date(cursor.getTime() + duration * 60 * 60 * 1000);
+
+            // On vérifie que le créneau ne dépasse pas l'heure de fermeture
+            if (end <= closeTime) {
+                const isOverlap = booked.some(b => (start < new Date(b.end_time) && end > new Date(b.start_time)));
+
+                if (!isOverlap) {
+                    const hourStr = start.toTimeString().slice(0, 5); // ex: "18:30"
+                    
+                    // --- LOGIQUE DÉTECTION HEURE PLEINE (PRIME) ---
+                    // Fonctionne même si la plage traverse minuit (ex: 18:00 à 01:00)
+                    let isPeakHour = false;
+if (t.peak_start && t.peak_end) {
+    if (t.peak_start < t.peak_end) {
+        // Plage classique (ex: 18h à 22h)
+        isPeakHour = (hourStr >= t.peak_start && hourStr < t.peak_end);
+    } else {
+        // Plage qui traverse minuit (ex: 18h à 01h)
+        isPeakHour = (hourStr >= t.peak_start || hourStr < t.peak_end);
+    }
+}
+                    
+                    // --- SÉLECTION DU PRIX FORFAITAIRE ---
+                    const suffix = duration == 1 ? '1h' : (duration == 1.5 ? '1h30' : '2h');
+                    let pricePerPerson = 0;
+
+                    if (isWeekend) {
+                        pricePerPerson = t[`p_weekend_${suffix}`] || 9;
+                    } else if (isPeakHour) {
+                        pricePerPerson = t[`p_pleine_${suffix}`] || 9;
+                    } else {
+                        pricePerPerson = t[`p_creuse_${suffix}`] || 7;
+                    }
+
+                    slots.push({
+                        time: hourStr,
+                        price: Math.round(pricePerPerson * nbPlayers) // Prix total pour le groupe
+                    });
+                }
+            }
+            cursor.setMinutes(cursor.getMinutes() + 30);
+        }
+        res.json(slots);
+    } catch (e) { 
+        console.error("Erreur getAvailableSlots:", e); 
+        res.status(500).json([]); 
+    }
+};

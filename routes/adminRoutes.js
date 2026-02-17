@@ -8,9 +8,13 @@ router.use(isAuthorized);
 
 // Complexe & Stats
 router.get('/my-complex', adminController.getMyComplex);
-router.post('/my-complex', adminController.updateComplex);
 router.get('/stats', adminController.getAdvancedStats); // Route mise à jour V2
 router.get('/chart-data', adminController.getChartData);
+
+router.post('/my-complex', upload.fields([
+    { name: 'logo', maxCount: 1 }, 
+    { name: 'cover', maxCount: 1 }
+]), adminController.updateComplex);
 
 // Gestion Terrains
 router.get('/terrains', adminController.getTerrains);
@@ -47,5 +51,10 @@ router.delete('/marketing/promos/:id', adminController.deletePromo);
 router.get('/sanctions', adminController.getSanctions);
 router.post('/sanctions', adminController.createSanction);   // ← change
 router.delete('/sanctions/:id', adminController.deleteSanction); // ← change
+
+// Gestion des rôles de vote
+router.get('/vote-roles', adminController.getVoteRoles);
+router.post('/vote-roles', adminController.createVoteRole);
+router.delete('/vote-roles/:id', adminController.deleteVoteRole);
 
 module.exports = router;

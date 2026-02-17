@@ -82,6 +82,7 @@ async function loadData() {
     try {
         const res = await fetch(`/api/match/${matchId}`);
         const data = await res.json();
+        currentPlayersData = data.players;
         
         // 1. Gestion des erreurs de récupération
         if(data.error) {
@@ -172,7 +173,7 @@ async function loadData() {
 
             // --- LIVE DASHBOARD : Actualisation du tableau des votes en temps réel ---
             // Cette fonction va chercher les votes en BDD et met à jour ton tableau de stats
-            refreshLiveVotes(data.players); 
+           renderVoteResults();
 
         } else {
             // CAS B : Le match est physiquement fini (heure passée) mais le score n'est pas encore saisi.
@@ -640,14 +641,41 @@ function openScoreModal(data) {
 
 async function submitFinalScore(e) {
     e.preventDefault();
-    const scoreA = parseInt(document.getElementById('final-scoreA').value);
-    const scoreB = parseInt(document.getElementById('final-scoreB').value);
     
+    // 1. On récupère les scores totaux affichés en haut
+    const scoreA = parseInt(document.getElementById('final-scoreA').value) || 0;
+    const scoreB = parseInt(document.getElementById('final-scoreB').value) || 0;
+    
+    let sumA = 0;
+    let sumB = 0;
     const goalsData = {};
+
+    // 2. On boucle sur chaque boucher pour compter leurs buts
     document.querySelectorAll('.player-goal-input').forEach(input => {
-        goalsData[input.dataset.userId] = parseInt(input.value);
+        const userId = parseInt(input.dataset.userId);
+        const goals = parseInt(input.value) || 0;
+        goalsData[userId] = goals;
+
+        // On cherche à quelle équipe appartient ce joueur dans nos données locales
+        const player = currentPlayersData.find(p => p.id === userId);
+        if (player) {
+            if (player.team_side === 'A') sumA += goals;
+            else if (player.team_side === 'B') sumB += goals;
+        }
     });
 
+    // 3. --- LA SÉCURITÉ (VALIDATION) ---
+    if (sumA !== scoreA) {
+        alert(`❌ Erreur équipe DOMICILE : Tu as mis un score de ${scoreA}, mais la somme des buteurs fait ${sumA} !`);
+        return; // On arrête tout ici
+    }
+
+    if (sumB !== scoreB) {
+        alert(`❌ Erreur équipe EXTÉRIEUR : Tu as mis un score de ${scoreB}, mais la somme des buteurs fait ${sumB} !`);
+        return; // On arrête tout ici
+    }
+
+    // 4. Si tout est bon, on envoie à la BDD
     try {
         const res = await fetch('/api/match/update-score-full', {
             method: 'POST',
@@ -659,45 +687,61 @@ async function submitFinalScore(e) {
             alert("✅ Scores validés et XP distribuée !");
             window.location.reload();
         }
-    } catch(e) { alert("Erreur lors de la validation"); }
+    } catch(e) { 
+        alert("Erreur lors de la validation"); 
+    }
 }
 
 
-function showVotingSystem(players) {
-    const targets = players.filter(p => p.id !== currentUser.id);
-    
-    let html = `
-    <div id="vote-overlay" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
-        <h2 class="font-orbitron text-xl md:text-2xl font-black text-white mb-8 tracking-tighter">QUI A BRILLE SUR LE TERRAIN ?</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl">`;
+async function showVotingSystem(players) {
+    try {
+        // 1. On récupère les rôles dynamiques que tu as créés (ex: Nullard, MVP, etc.)
+        const res = await fetch('/api/match-roles'); // On utilise la route
+        const roles = await res.json();
 
-    targets.forEach(p => {
-        html += `
-        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl text-center hover:bg-white/10 transition shadow-2xl">
-            <div class="relative w-16 h-16 mx-auto mb-3">
-                <img src="${p.avatar_url || '/image/default-avatar.png'}" class="w-full h-full rounded-full border-2 border-neon object-cover">
-                <div class="absolute -bottom-1 -right-1 bg-neon text-black text-[8px] font-black px-1 rounded-full">${p.overall_rating || '5.0'}</div>
-            </div>
-            <h3 class="font-orbitron font-bold text-white uppercase text-sm mb-4">${p.first_name}</h3>
-            
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="sendVote(${p.id}, 'mvp')" class="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 py-2 rounded font-black hover:bg-yellow-500 hover:text-black transition">🥇 MVP</button>
-                <button onclick="sendVote(${p.id}, 'worst')" class="text-[9px] bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded font-black hover:bg-red-500 hover:text-white transition">💀 PIRE</button>
-                <button onclick="sendVote(${p.id}, 'strat')" class="text-[9px] bg-blue-500/10 text-blue-500 border border-blue-500/20 py-2 rounded font-black hover:bg-blue-500 hover:text-white transition">🧠 STRAT.</button>
-                <button onclick="sendVote(${p.id}, 'fairplay')" class="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 py-2 rounded font-black hover:bg-green-500 hover:text-white transition">🤝 FAIRPLAY</button>
-                <button onclick="sendVote(${p.id}, 'clutch')" class="text-[9px] bg-purple-500/10 text-purple-500 border border-purple-500/20 py-2 rounded font-black hover:bg-purple-500 hover:text-white transition">⚡ CLUTCH</button>
-                <button onclick="sendVote(${p.id}, 'reveal')" class="text-[9px] bg-orange-500/10 text-orange-500 border border-orange-500/20 py-2 rounded font-black hover:bg-orange-500 hover:text-white transition">🌟 RÉVÉL.</button>
-            </div>
+        // 2. On filtre pour ne pas voter pour soi-même
+        const targets = players.filter(p => p.id !== currentUser.id);
+        
+        let html = `
+        <div id="vote-overlay" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
+            <h2 class="font-orbitron text-xl md:text-2xl font-black text-white mb-8 tracking-tighter uppercase">QUI A BRILLE SUR LE TERRAIN ?</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl">`;
+
+        targets.forEach(p => {
+            // --- NOUVEAU : GÉNÉRATION DYNAMIQUE DES BOUTONS ---
+            let buttonsHtml = '';
+            roles.forEach(role => {
+                buttonsHtml += `
+                    <button onclick="sendVote(${p.id}, '${role.category_key}')" 
+                            class="text-[9px] bg-white/5 text-white border border-white/10 py-2 rounded font-black hover:bg-neon hover:text-black transition uppercase">
+                        ${role.label}
+                    </button>`;
+            });
+
+            html += `
+            <div class="bg-white/5 border border-white/10 p-5 rounded-2xl text-center hover:bg-white/10 transition shadow-2xl">
+                <div class="relative w-16 h-16 mx-auto mb-3">
+                    <img src="${p.avatar_url || '/image/default-avatar.png'}" class="w-full h-full rounded-full border-2 border-neon object-cover">
+                    <div class="absolute -bottom-1 -right-1 bg-neon text-black text-[8px] font-black px-1 rounded-full">${p.overall_rating || '5.0'}</div>
+                </div>
+                <h3 class="font-orbitron font-bold text-white uppercase text-sm mb-4">${p.first_name}</h3>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    ${buttonsHtml}
+                </div>
+            </div>`;
+        });
+
+        html += `</div>
+            <button onclick="document.getElementById('vote-overlay').remove()" class="mt-10 px-8 py-3 border border-white/20 rounded-full text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:text-white hover:border-white transition">Fermer</button>
         </div>`;
-    });
-
-    html += `</div>
-        <button onclick="document.getElementById('vote-overlay').remove()" class="mt-10 px-8 py-3 border border-white/20 rounded-full text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:text-white hover:border-white transition">Fermer</button>
-    </div>`;
-    
-    document.body.insertAdjacentHTML('beforeend', html);
+        
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch (e) {
+        console.error("Erreur chargement système de vote:", e);
+        alert("Impossible de charger les rôles de vote.");
+    }
 }
-
 async function sendVote(targetId, category) {
     try {
         const res = await fetch('/api/match/vote', {
@@ -706,79 +750,114 @@ async function sendVote(targetId, category) {
             body: JSON.stringify({ matchId, targetId, category })
         });
         const data = await res.json();
+        
         if(data.success) {
             alert("✅ Vote enregistré ! XP distribuée.");
+            // On ferme la fenêtre de vote
+            const overlay = document.getElementById('vote-overlay');
+            if(overlay) overlay.remove();
+            
+            // ON RAFRAÎCHIT LE TABLEAU IMMÉDIATEMENT
+            renderVoteResults(); 
         } else {
             alert("⚠️ " + data.error);
         }
-    } catch(e) { alert("Erreur réseau"); }
+    } catch(e) { 
+        console.error("Erreur vote:", e);
+        alert("Erreur réseau"); 
+    }
 }
 
 
-async function refreshLiveVotes(players) {
+async function renderVoteResults() {
+    const container = document.getElementById('live-vote-results');
+    if(!container) return;
+
     try {
-        const res = await fetch(`/api/match/${matchId}/votes`);
-        const votesData = await res.json();
-
-        // 1. Initialisation du Tally (compteur)
-        const tally = {};
-        players.forEach(p => {
-            tally[p.id] = { name: p.first_name, mvp:0, worst:0, strat:0, fairplay:0, clutch:0, reveal:0 };
-        });
-
-        // 2. Remplissage avec les données réelles
-        votesData.forEach(v => {
-            if (tally[v.target_id]) tally[v.target_id][v.category] = v.count;
-        });
-
-        // 3. Calcul des Leaders (pour les boîtes du haut)
-        const categories = ['mvp', 'worst', 'strat', 'fairplay', 'clutch', 'reveal'];
-        const leaders = {};
-        categories.forEach(cat => {
-            let max = 0; let leader = "--";
-            players.forEach(p => {
-                if(tally[p.id][cat] > max) { max = tally[p.id][cat]; leader = tally[p.id].name; }
-                else if(tally[p.id][cat] === max && max > 0) { leader += " & " + tally[p.id].name; }
-            });
-            leaders[cat] = leader;
-        });
-
-        // 4. Construction du HTML (Style FIFA / Maquette)
-        let html = `
-        <div class="current-winners flex flex-wrap justify-center gap-3 mb-6">
-            <div class="winner-box-match"><span>🥇 MVP</span><strong>${leaders.mvp}</strong></div>
-            <div class="winner-box-match"><span>💀 PIRE</span><strong>${leaders.worst}</strong></div>
-            <div class="winner-box-match"><span>🧠 STRAT.</span><strong>${leaders.strat}</strong></div>
-        </div>
-
-        <div class="live-dashboard-match bg-black/40 border border-red-500/20 rounded-xl p-6">
-            <h3 class="text-red-500 font-orbitron text-[10px] tracking-[3px] mb-6 text-center uppercase">📊 Statistiques de fin de match</h3>
-            <table class="w-full text-center text-[11px]">
-                <thead>
-                    <tr class="text-gray-500 uppercase border-b border-white/5">
-                        <th class="pb-4 text-left">Joueur</th>
-                        <th class="pb-4">MVP</th><th class="pb-4">PIRE</th><th class="pb-4">STRAT</th>
-                        <th class="pb-4">FAIR</th><th class="pb-4">CLUTCH</th><th class="pb-4">RÉVÉL</th>
-                    </tr>
-                </thead>
-                <tbody class="text-white">`;
-
-        players.forEach(p => {
-            const s = tally[p.id];
-            html += `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition">
-                    <td class="py-4 text-left font-bold">${s.name}</td>
-                    <td class="${s.mvp > 0 ? 'text-yellow-500 font-black' : 'opacity-30'}">${s.mvp}</td>
-                    <td class="${s.worst > 0 ? 'text-red-500' : 'opacity-30'}">${s.worst}</td>
-                    <td class="opacity-80">${s.strat}</td><td class="opacity-80">${s.fairplay}</td>
-                    <td class="opacity-80">${s.clutch}</td><td class="opacity-80">${s.reveal}</td>
-                </tr>`;
-        });
-
-        html += `</tbody></table></div>`;
+        const [resVotes, resConfig] = await Promise.all([
+            fetch(`/api/match/${matchId}/votes`),
+            fetch('/api/match-roles') 
+        ]);
         
-        const container = document.getElementById('live-vote-results');
-        if (container) container.innerHTML = html;
+        const votes = await resVotes.json();
+        const configRoles = await resConfig.json();
+        
+        const tally = {};
+        currentPlayersData.forEach(p => {
+            tally[p.id] = { name: p.first_name || 'Joueur' };
+            configRoles.forEach(role => {
+                tally[p.id][role.category_key] = 0;
+            });
+        });
 
-    } catch(e) { console.error("Erreur refresh votes:", e); }
+        votes.forEach(v => {
+            if(tally[v.target_id]) {
+                tally[v.target_id][v.category] = v.count;
+            }
+        });
+
+        // --- 1. GÉNÉRATION DES CASES DE LEADERS (EN HAUT) ---
+        let highlightsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">';
+        
+        configRoles.forEach(role => {
+            let winnerName = '--';
+            let maxVotes = 0;
+
+            // On cherche qui a le plus de votes pour ce rôle précis
+            Object.keys(tally).forEach(pId => {
+                const count = tally[pId][role.category_key];
+                if (count > 0 && count >= maxVotes) {
+                    // En cas d'égalité, le dernier trouvé prend la place (ou on peut affiner)
+                    maxVotes = count;
+                    winnerName = tally[pId].name;
+                }
+            });
+
+            highlightsHtml += `
+                <div class="glass-card p-4 flex flex-col items-center justify-center border-t-2 border-white/10 hover:border-neon transition group">
+                    <i class="fa-solid ${role.icon || 'fa-star'} text-gray-500 mb-2 group-hover:text-neon transition"></i>
+                    <span class="text-[8px] text-gray-500 uppercase font-black tracking-widest mb-1">${role.label}</span>
+                    <span class="text-white font-orbitron font-bold text-xs uppercase truncate w-full text-center ${winnerName !== '--' ? 'text-neon' : 'opacity-30'}">${winnerName}</span>
+                </div>
+            `;
+        });
+        highlightsHtml += '</div>';
+
+        // --- 2. GÉNÉRATION DU TABLEAU (DÉJÀ OK) ---
+        let headersHtml = '<th class="pb-4 text-left px-2 text-gray-500 uppercase">Joueur</th>';
+        configRoles.forEach(role => {
+            headersHtml += `<th class="pb-4 uppercase text-[9px] px-2 text-gray-500">${role.label}</th>`;
+        });
+
+        let tableHtml = `
+            <div class="glass-card p-6 mt-8 animate-fade-in border-t border-white/5">
+                <h3 class="font-orbitron font-bold text-white text-center mb-6 uppercase tracking-widest text-xs">📊 Statistiques détaillées</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center text-[11px]">
+                        <thead>
+                            <tr class="border-b border-white/5">${headersHtml}</tr>
+                        </thead>
+                        <tbody class="text-white">`;
+
+        currentPlayersData.forEach(p => {
+            const s = tally[p.id];
+            let rowStatsHtml = `<td class="py-4 text-left font-bold text-white px-2">${s.name}</td>`;
+            
+            configRoles.forEach(role => {
+                const count = s[role.category_key] || 0;
+                const colorClass = count > 0 ? 'text-neon font-black scale-110' : 'opacity-20';
+                rowStatsHtml += `<td class="px-2 ${colorClass}">${count}</td>`;
+            });
+
+            tableHtml += `<tr class="border-b border-white/5 hover:bg-white/5 transition">${rowStatsHtml}</tr>`;
+        });
+
+        tableHtml += `</tbody></table></div></div>`;
+
+        // --- 3. AFFICHAGE FINAL (HIGHLIGHTS + TABLEAU) ---
+        container.innerHTML = highlightsHtml + tableHtml;
+
+    } catch(e) { 
+        console.error("Erreur remplissage complet:", e); 
+    }
 }

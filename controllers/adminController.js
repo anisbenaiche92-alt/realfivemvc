@@ -223,44 +223,69 @@ exports.getTerrains = async (req, res) => {
     } catch(e) { res.json([]); }
 };
 
+// DANS adminController.js
 exports.addTerrain = async (req, res) => {
-    const { name, sport_type, hourly_rate, surface_type, is_indoor, has_camera, features } = req.body;
+    const { 
+        name, sport_type, surface_type, is_indoor, has_camera, features,
+        p_creuse_1h, p_creuse_1h30, p_creuse_2h,
+        p_pleine_1h, p_pleine_1h30, p_pleine_2h,
+        p_weekend_1h, p_weekend_1h30, p_weekend_2h 
+    } = req.body;
+
     try {
         const [complex] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [req.session.user.id]);
-        
-        // Conversion des features en JSON string si nécessaire
-        const featuresJson = typeof features === 'object' ? JSON.stringify(features) : features;
+        const featuresJson = JSON.stringify(features);
 
         await db.query(`
             INSERT INTO terrains 
-            (complex_id, name, sport_type, hourly_rate, surface_type, is_indoor, has_camera, features, is_active, maintenance_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'AVAILABLE')`, 
-            [complex[0].id, name, sport_type, hourly_rate, surface_type, is_indoor, has_camera, featuresJson]
+            (complex_id, name, sport_type, surface_type, is_indoor, has_camera, features,
+             p_creuse_1h, p_creuse_1h30, p_creuse_2h,
+             p_pleine_1h, p_pleine_1h30, p_pleine_2h,
+             p_weekend_1h, p_weekend_1h30, p_weekend_2h,
+             hourly_rate, maintenance_status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AVAILABLE')`, 
+            [
+                complex[0].id, name, sport_type, surface_type, is_indoor, has_camera, featuresJson,
+                p_creuse_1h, p_creuse_1h30, p_creuse_2h,
+                p_pleine_1h, p_pleine_1h30, p_pleine_2h,
+                p_weekend_1h, p_weekend_1h30, p_weekend_2h,
+                p_creuse_1h // On garde hourly_rate pour la compatibilité
+            ]
         );
         res.json({ success: true });
-    } catch(e) { 
-        console.error(e);
-        res.status(500).json({ error: "Erreur ajout terrain" }); 
-    }
+    } catch(e) { console.error(e); res.status(500).json({ error: "Erreur ajout" }); }
 };
 
+// DANS adminController.js
 exports.updateTerrain = async (req, res) => {
-    const { name, hourly_rate, sport_type, maintenance_status, surface_type, is_indoor, has_camera, features } = req.body;
+    const { 
+        name, sport_type, surface_type, is_indoor, has_camera, features, maintenance_status,
+        p_creuse_1h, p_creuse_1h30, p_creuse_2h,
+        p_pleine_1h, p_pleine_1h30, p_pleine_2h,
+        p_weekend_1h, p_weekend_1h30, p_weekend_2h 
+    } = req.body;
+
     try {
-        const featuresJson = typeof features === 'object' ? JSON.stringify(features) : features;
+        const featuresJson = JSON.stringify(features);
 
         await db.query(`
             UPDATE terrains SET 
-            name=?, hourly_rate=?, sport_type=?, maintenance_status=?, 
-            surface_type=?, is_indoor=?, has_camera=?, features=? 
+            name=?, sport_type=?, surface_type=?, is_indoor=?, has_camera=?, features=?, maintenance_status=?,
+            p_creuse_1h=?, p_creuse_1h30=?, p_creuse_2h=?,
+            p_pleine_1h=?, p_pleine_1h30=?, p_pleine_2h=?,
+            p_weekend_1h=?, p_weekend_1h30=?, p_weekend_2h=?,
+            hourly_rate=?
             WHERE id=?`, 
-            [name, hourly_rate, sport_type, maintenance_status, surface_type, is_indoor, has_camera, featuresJson, req.params.id]
+            [
+                name, sport_type, surface_type, is_indoor, has_camera, featuresJson, maintenance_status,
+                p_creuse_1h, p_creuse_1h30, p_creuse_2h,
+                p_pleine_1h, p_pleine_1h30, p_pleine_2h,
+                p_weekend_1h, p_weekend_1h30, p_weekend_2h,
+                p_creuse_1h, req.params.id
+            ]
         );
         res.json({ success: true });
-    } catch(e) { 
-        console.error(e);
-        res.status(500).json({ error: "Erreur mise à jour terrain" }); 
-    }
+    } catch(e) { console.error(e); res.status(500).json({ error: "Erreur mise à jour" }); }
 };
 
 exports.deleteTerrain = async (req, res) => {
@@ -309,22 +334,50 @@ exports.getMyComplex = async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Erreur serveur" }); }
 };
 
+// DANS adminController.js
+
+// adminController.js
+
+// DANS adminController.js
 exports.updateComplex = async (req, res) => {
-    const { address, city, cover_image_url, amenities } = req.body;
     try {
-        const [existing] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [req.session.user.id]);
-        if (existing.length > 0) {
-            await db.query('UPDATE complexes SET address=?, city=?, cover_image_url=?, amenities=? WHERE owner_id=?', 
-            [address, city, cover_image_url, amenities, req.session.user.id]);
-        } else {
-            await db.query('INSERT INTO complexes (owner_id, name, address, city, cover_image_url, amenities, is_validated) VALUES (?, ?, ?, ?, ?, ?, 1)',
-            [req.session.user.id, 'Mon Complexe', address, city, cover_image_url, amenities]);
-        }
+        const [complexRows] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [req.session.user.id]);
+        if (!complexRows.length) return res.status(404).json({ error: "Complexe non trouvé" });
+        const complexId = complexRows[0].id;
+
+        const d = req.body; // Données texte (Nom, Email, etc.)
+        const f = req.files; // Fichiers (Logo, Cover)
+
+        // Gestion des images (Pièces jointes)
+        // On garde l'ancienne URL si pas de nouveau fichier envoyé
+        let logoPath = d.existing_logo_url || null;
+        let coverPath = d.existing_cover_url || null;
+
+        if (f && f['logo']) logoPath = '/uploads/' + f['logo'][0].filename;
+        if (f && f['cover']) coverPath = '/uploads/' + f['cover'][0].filename;
+
+        // MISE À JOUR DE TOUS LES CHAMPS (29 paramètres synchronisés)
+        await db.query(
+            `UPDATE complexes SET 
+                name=?, description=?, address=?, city=?, zip_code=?, 
+                phone_contact=?, email=?, website=?,
+                open_time=?, close_time=?, peak_start=?, peak_end=?,
+                logo_url=?, cover_image_url=?, complexe_image_url=?
+             WHERE id=?`,
+            [
+                d.name, d.description, d.address, d.city, d.zip_code,
+                d.phone, d.email, d.website,
+                d.open_time, d.close_time, d.peak_start, d.peak_end,
+                logoPath, coverPath, coverPath, // On met à jour les deux champs cover
+                complexId
+            ]
+        );
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: "Erreur mise à jour" }); }
+    } catch (e) {
+        console.error("Crash SQL:", e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
 };
-
-
 // ==========================================
 // 6. MODULE FINANCE & COMPTABILITÉ
 // ==========================================
@@ -588,4 +641,32 @@ exports.updateLoyaltySettings = async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: "Erreur lors de la sauvegarde" });
     }
+};
+
+// Récupérer tous les rôles configurés
+exports.getVoteRoles = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM vote_roles_config ORDER BY id ASC');
+        res.json(rows);
+    } catch (e) { res.status(500).json({ error: "Erreur lecture rôles" }); }
+};
+
+// Créer un nouveau rôle
+exports.createVoteRole = async (req, res) => {
+    const { label, category_key, xp_bonus, rating_bonus } = req.body;
+    try {
+        await db.query(
+            'INSERT INTO vote_roles_config (label, category_key, xp_bonus, rating_bonus) VALUES (?, ?, ?, ?)',
+            [label, category_key.toLowerCase(), xp_bonus, rating_bonus]
+        );
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Erreur création rôle" }); }
+};
+
+// Supprimer un rôle
+exports.deleteVoteRole = async (req, res) => {
+    try {
+        await db.query('DELETE FROM vote_roles_config WHERE id = ?', [req.params.id]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Erreur suppression" }); }
 };

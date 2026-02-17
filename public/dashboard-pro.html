@@ -419,23 +419,22 @@
         <div class="overflow-x-auto rounded-xl border border-white/5">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-black/50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                    <tr>
-                        <th class="p-4">Code</th>
-                        <th class="p-4">Réduction</th>
-                        <th class="p-4">Utilisations</th>
-                        <th class="p-4">Expiration</th>
-                        <th class="p-4 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="promo-table-body" class="divide-y divide-white/5 text-sm text-gray-300">
-                    <!-- Les lignes seront insérées ici dynamiquement -->
-                    <tr>
-                        <td colspan="5" class="p-8 text-center text-gray-500">
-                            <i class="fa-solid fa-tags text-2xl mb-2 block"></i>
-                            Aucun code promo actif
-                        </td>
-                    </tr>
-                </tbody>
+    <tr>
+        <th class="p-4">Code</th>
+        <th class="p-4">Réduction</th>
+        <th class="p-4">Utilisations</th>
+        <th class="p-4">Début</th> <th class="p-4">Expiration</th>
+        <th class="p-4 text-right">Action</th>
+    </tr>
+</thead>
+<tbody id="promo-table-body" class="divide-y divide-white/5 text-sm text-gray-300">
+    <tr>
+        <td colspan="6" class="p-8 text-center text-gray-500">
+            <i class="fa-solid fa-tags text-2xl mb-2 block"></i>
+            Aucun code promo actif
+        </td>
+    </tr>
+</tbody>
             </table>
         </div>
     </div>
@@ -494,108 +493,100 @@
                 </div>
             </div>
         </div>
-    </div>
+      </div>
 
-    <div class="mt-8 pt-6 border-t border-white/5">
+     <div class="mt-8 pt-6 border-t border-white/5">
         <button onclick="marketingManager.saveLoyaltySettings()" class="btn-primary w-full md:w-auto px-10 bg-[#EF1A2D] text-black hover:bg-white font-black">
             <i class="fa-solid fa-save mr-2"></i> ENREGISTRER LA CONFIGURATION
         </button>
     </div>
+
+<div class="glass-card p-8 mt-8 border-t-4 border-t-yellow-500">
+    <div class="flex items-center justify-between mb-8">
+        <h3 class="font-orbitron font-bold text-xl text-white">🏆 RÔLES & RÉCOMPENSES DE VOTE</h3>
+        <button onclick="modals.open('vote-role')" class="btn-primary text-xs px-4 py-2 bg-yellow-500 text-black">
+            <i class="fa-solid fa-plus mr-2"></i> AJOUTER UN RÔLE
+        </button>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-white/5">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-black/50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                <tr>
+                    <th class="p-4">Rôle</th>
+                    <th class="p-4">ID Technique</th>
+                    <th class="p-4 text-center">Gain XP</th>
+                    <th class="p-4 text-center">Gain Note</th>
+                    <th class="p-4 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody id="vote-roles-table-body" class="divide-y divide-white/5 text-sm text-gray-300">
+                </tbody>
+        </table>
+    </div>
+</div>
 </div>
 </div>
 
-<!-- SECTION CONFIGURATION / SETTINGS -->
-<div id="view-settings" class="hidden space-y-8 animate-fade-in">
-    <!-- Informations du Complexe -->
-    <div class="glass-card p-8">
-        <h3 class="font-orbitron font-bold text-xl text-white mb-6">
-            <i class="fa-solid fa-building text-[#EF1A2D] mr-2"></i>
-            INFORMATIONS DU COMPLEXE
+<div id="view-settings" class="hidden space-y-8 animate-fade-in pb-20">
+    <div class="glass-card p-8 border-l-4 border-neon">
+        <h3 class="font-orbitron font-bold text-xl text-white mb-6 uppercase">
+            <i class="fa-solid fa-sliders text-neon mr-2"></i> Paramètres du Complexe
         </h3>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="section-label">Nom du complexe</label>
-                <input type="text" id="settings-name" placeholder="Ex: Five Anitrix" class="input-field">
+            <div class="p-4 bg-white/5 rounded-xl border border-white/5 flex flex-col gap-2">
+                <label class="section-label text-neon">Logo (Fichier)</label>
+                <input type="file" id="file-logo" class="text-xs text-gray-500">
             </div>
-            <div>
-                <label class="section-label">Téléphone</label>
-                <input type="tel" id="settings-phone" placeholder="+33 X XX XX XX XX" class="input-field">
+            <div class="p-4 bg-white/5 rounded-xl border border-white/5 flex flex-col gap-2">
+                <label class="section-label text-neon">Photo Couverture (Fichier)</label>
+                <input type="file" id="file-cover" class="text-xs text-gray-500">
             </div>
+
             <div class="md:col-span-2">
-                <label class="section-label">Adresse complète</label>
-                <input type="text" id="settings-address" placeholder="123 Rue du Sport, 75001 Paris" class="input-field">
+                <label class="section-label">Description du complexe</label>
+                <textarea id="settings-desc" class="input-field h-20" placeholder="Décrivez votre complexe..."></textarea>
             </div>
-            <div>
-                <label class="section-label">Email de contact</label>
-                <input type="email" id="settings-email" placeholder="contact@five.com" class="input-field">
+
+            <div><label class="section-label">Nom</label><input type="text" id="settings-name" class="input-field"></div>
+            <div><label class="section-label">Téléphone</label><input type="tel" id="settings-phone" class="input-field"></div>
+            
+            <div class="md:col-span-2"><label class="section-label">Adresse complète</label><input type="text" id="settings-address" class="input-field"></div>
+            
+            <div><label class="section-label">Ville</label><input type="text" id="settings-city" class="input-field"></div>
+            <div><label class="section-label">Code Postal</label><input type="text" id="settings-zip" class="input-field"></div>
+            
+            <div><label class="section-label">Email</label><input type="email" id="settings-email" class="input-field"></div>
+            <div><label class="section-label">Site Web</label><input type="url" id="settings-website" class="input-field"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 border-t border-white/5 pt-8">
+            <div class="bg-black/40 p-6 rounded-2xl border border-white/5">
+                <label class="text-[10px] text-gray-500 uppercase font-black mb-4 block">Heures d'exploitation</label>
+                <div class="flex items-center gap-4">
+                    <input type="time" id="complex-open" class="input-field text-xl font-orbitron text-center">
+                    <span class="text-gray-600 font-bold">À</span>
+                    <input type="time" id="complex-close" class="input-field text-xl font-orbitron text-center">
+                </div>
             </div>
-            <div>
-                <label class="section-label">Site web</label>
-                <input type="url" id="settings-website" placeholder="https://..." class="input-field">
+
+            <div class="bg-yellow-500/5 p-6 rounded-2xl border border-yellow-500/20">
+                <label class="text-[10px] text-yellow-500 uppercase font-black mb-4 block italic">Plage Heures Pleines (PRIME)</label>
+                <div class="flex items-center gap-4">
+                    <input type="time" id="peak-start" class="input-field text-xl font-orbitron text-center border-yellow-500/20">
+                    <span class="text-yellow-500/50 font-bold">À</span>
+                    <input type="time" id="peak-end" class="input-field text-xl font-orbitron text-center border-yellow-500/20">
+                </div>
             </div>
         </div>
-        <button onclick="settingsManager.saveComplexInfo()" class="btn-primary mt-6 w-auto px-8">
-            <i class="fa-solid fa-save mr-2"></i> Enregistrer
+        
+        <button onclick="settingsManager.save()" class="btn-primary mt-8 bg-neon text-white font-black px-10 py-4 rounded-xl uppercase tracking-widest shadow-lg shadow-neon/20 hover:scale-[1.02] transition-all">
+            SAUVEGARDER TOUTE LA CONFIGURATION
         </button>
     </div>
 
-    <!-- Horaires d'ouverture -->
-    <div class="glass-card p-8">
-        <h3 class="font-orbitron font-bold text-xl text-white mb-6">
-            <i class="fa-regular fa-clock text-[#EF1A2D] mr-2"></i>
-            HORAIRES D'OUVERTURE
-        </h3>
-        <div class="space-y-4">
-            <div class="grid grid-cols-3 gap-4 items-center" id="hours-container">
-                <!-- Sera rempli dynamiquement -->
-            </div>
-        </div>
-        <button onclick="settingsManager.saveHours()" class="btn-primary mt-6 w-auto px-8">
-            <i class="fa-solid fa-save mr-2"></i> Enregistrer les horaires
-        </button>
-    </div>
 
-    <!-- Tarification -->
-    <div class="glass-card p-8">
-        <h3 class="font-orbitron font-bold text-xl text-white mb-6">
-            <i class="fa-solid fa-euro-sign text-[#EF1A2D] mr-2"></i>
-            TARIFICATION PAR DÉFAUT
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-                <label class="section-label">Prix 1 heure (jour)</label>
-                <div class="relative">
-                    <input type="number" id="settings-price-day" placeholder="50" class="input-field pl-8">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
-                </div>
-            </div>
-            <div>
-                <label class="section-label">Prix 1 heure (soir)</label>
-                <div class="relative">
-                    <input type="number" id="settings-price-night" placeholder="60" class="input-field pl-8">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
-                </div>
-            </div>
-            <div>
-                <label class="section-label">Prix 1 heure (weekend)</label>
-                <div class="relative">
-                    <input type="number" id="settings-price-weekend" placeholder="70" class="input-field pl-8">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
-                </div>
-            </div>
-        </div>
-        <div class="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-            <div class="flex items-start gap-3">
-                <i class="fa-solid fa-info-circle text-yellow-500 mt-1"></i>
-                <div class="text-sm text-gray-300">
-                    <strong class="text-yellow-500">Astuce :</strong> Ces tarifs sont appliqués par défaut. Vous pouvez définir des tarifs spécifiques pour chaque terrain dans la section "Parc Terrains".
-                </div>
-            </div>
-        </div>
-        <button onclick="settingsManager.savePricing()" class="btn-primary mt-6 w-auto px-8">
-            <i class="fa-solid fa-save mr-2"></i> Enregistrer les tarifs
-        </button>
-    </div>
+
 
     <!-- Préférences système -->
     <div class="glass-card p-8">
@@ -787,133 +778,103 @@
         </div>
     </div>
 
-   <div id="modal-resa" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-[#111] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-[#0F0F0F]">
-                <h3 class="font-orbitron font-bold text-xl text-white tracking-wide"><i class="fa-solid fa-plus-circle text-[#EF1A2D] mr-2"></i> Nouvelle Réservation</h3>
-                <button onclick="modals.close('resa')" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
+   
 
-            <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar">
-                <div>
-                    <label class="section-label">1. Client</label>
-                    <input type="text" id="resa-client-name" placeholder="Nom du client ou événement" class="input-field">
-                    <div class="flex gap-4 mt-2">
-                        <label class="flex items-center gap-2 cursor-pointer bg-white/5 p-3 rounded-lg flex-1 hover:bg-white/10 transition border border-transparent hover:border-white/10">
-                            <input type="radio" name="resa-source" value="TELEPHONE" class="accent-[#EF1A2D]" checked> 
-                            <span class="text-xs font-bold text-gray-300">📞 Téléphone</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer bg-white/5 p-3 rounded-lg flex-1 hover:bg-white/10 transition border border-transparent hover:border-white/10">
-                            <input type="radio" name="resa-source" value="GUICHET" class="accent-[#EF1A2D]"> 
-                            <span class="text-xs font-bold text-gray-300">🏪 Guichet</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="col-span-2">
-                        <label class="section-label">2. Terrain</label>
-                        <select id="resa-terrain" class="input-field cursor-pointer"></select>
-                    </div>
-                    <div>
-                        <label class="section-label">3. Début</label>
-                        <input type="datetime-local" id="resa-start" class="input-field">
-                    </div>
-                    <div>
-                        <label class="section-label">4. Fin</label>
-                        <input type="datetime-local" id="resa-end" class="input-field">
-                    </div>
-                </div>
-                <div>
-                    <label class="section-label">5. Prix Spécial (Optionnel)</label>
-                    <div class="relative">
-                        <input type="number" id="resa-price" placeholder="Laisser vide pour prix auto" class="input-field pl-10">
-                        <i class="fa-solid fa-euro-sign absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 border-t border-white/5 bg-[#0F0F0F] flex gap-4">
-                <button onclick="modals.close('resa')" class="btn-secondary flex-1">Annuler</button>
-                <button onclick="calendarManager.createResa()" class="btn-primary flex-1">Confirmer & Facturer</button>
-            </div>
+<div id="modal-terrain" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+    <div class="bg-[#111] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-[#0F0F0F]">
+            <h3 class="font-orbitron font-bold text-xl text-white tracking-wide" id="modal-terrain-title">CONFIGURER TERRAIN</h3>
+            <button onclick="modals.close('terrain')" class="text-gray-500 hover:text-white transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
         </div>
+
+        <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <input type="hidden" id="terrain-id">
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="section-label">Nom du Terrain</label>
+                    <input type="text" id="t-name" placeholder="Ex: Court Central" class="input-field">
+                </div>
+                <div>
+                    <label class="section-label">Sport</label>
+                    <select id="t-sport" class="input-field cursor-pointer">
+                        <option value="FOOT5">⚽ Foot 5</option>
+                        <option value="PADEL">🎾 Padel</option>
+                        <option value="BASKET">🏀 Basket</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="section-label">Environnement</label>
+                    <select id="t-indoor" class="input-field text-xs">
+                        <option value="1">🏠 Intérieur (Indoor)</option>
+                        <option value="0">🌤️ Extérieur (Outdoor)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
+    <label class="section-label block text-neon">Grille tarifaire (Prix par personne)</label>
+    
+    <div class="grid grid-cols-4 gap-2 text-[9px] text-gray-500 font-bold uppercase text-center">
+        <div>Type</div><div>1H</div><div>1H30</div><div>2H</div>
     </div>
 
-    <div id="modal-terrain" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-[#111] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-[#0F0F0F]">
-                <h3 class="font-orbitron font-bold text-xl text-white tracking-wide" id="modal-terrain-title">CONFIGURER TERRAIN</h3>
-                <button onclick="modals.close('terrain')" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
+    <div class="grid grid-cols-4 gap-2 items-center">
+        <div class="text-[9px] font-bold text-gray-400">CREUSE</div>
+        <input type="number" id="p-creuse-1h" class="input-field text-xs p-1 text-center" value="7">
+        <input type="number" id="p-creuse-1h30" class="input-field text-xs p-1 text-center" value="10">
+        <input type="number" id="p-creuse-2h" class="input-field text-xs p-1 text-center" value="13">
+    </div>
 
-            <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar">
-                <input type="hidden" id="terrain-id">
+    <div class="grid grid-cols-4 gap-2 items-center">
+        <div class="text-[9px] font-bold text-neon">PLEINE</div>
+        <input type="number" id="p-pleine-1h" class="input-field text-xs p-1 text-center" value="9">
+        <input type="number" id="p-pleine-1h30" class="input-field text-xs p-1 text-center" value="13">
+        <input type="number" id="p-pleine-2h" class="input-field text-xs p-1 text-center" value="17">
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 items-center">
+        <div class="text-[9px] font-bold text-yellow-500">WEEKEND</div>
+        <input type="number" id="p-weekend-1h" class="input-field text-xs p-1 text-center" value="9">
+        <input type="number" id="p-weekend-1h30" class="input-field text-xs p-1 text-center" value="13">
+        <input type="number" id="p-weekend-2h" class="input-field text-xs p-1 text-center" value="17">
+    </div>
+</div>
+
+            <div>
+                <label class="section-label">Surface & Options</label>
+                <select id="t-surface" class="input-field text-xs mb-4">
+                    <option value="Synthétique">Synthétique</option>
+                    <option value="Parquet">Parquet</option>
+                    <option value="Goudron">Goudron</option>
+                </select>
                 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="section-label">Nom du Terrain</label>
-                        <input type="text" id="t-name" placeholder="Ex: Court Central" class="input-field">
-                    </div>
-                    <div>
-                        <label class="section-label">Sport</label>
-                        <select id="t-sport" class="input-field cursor-pointer">
-                            <option value="FOOT5">⚽ Foot 5</option>
-                            <option value="PADEL">🎾 Padel</option>
-                            <option value="TENNIS">Badminton</option>
-                            <option value="BASKET">🏀 Basket</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="section-label">Prix / Heure (€)</label>
-                        <input type="number" id="t-price" placeholder="80" class="input-field">
-                    </div>
+                <div class="flex flex-wrap gap-3">
+                    <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" id="t-camera" class="accent-neon">
+                        <span class="text-[10px] font-bold text-gray-300 uppercase">🎥 Caméra</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" id="feat-lighting" class="accent-neon">
+                        <span class="text-[10px] font-bold text-gray-300 uppercase">💡 Éclairage</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                        <input type="checkbox" id="feat-heating" class="accent-neon">
+                        <span class="text-[10px] font-bold text-gray-300 uppercase">🔥 Chauffage</span>
+                    </label>
                 </div>
-
-                <div>
-                    <label class="section-label">Caractéristiques</label>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <span class="text-xs text-gray-500 mb-1 block">Surface</span>
-                            <select id="t-surface" class="input-field text-xs">
-                                <option value="Synthétique">Synthétique</option>
-                                <option value="Parquet">Parquet</option>
-                                <option value="Sable">Sable</option>
-                                <option value="Goudron">Goudron</option>
-                            </select>
-                        </div>
-                        <div>
-                            <span class="text-xs text-gray-500 mb-1 block">Environnement</span>
-                            <select id="t-indoor" class="input-field text-xs">
-                                <option value="1">🏠 Intérieur (Indoor)</option>
-                                <option value="0">🌤️ Extérieur (Outdoor)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <label class="section-label mt-4">Équipements & Options</label>
-                    <div class="flex flex-wrap gap-3 mt-2">
-                        <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition select-none">
-                            <input type="checkbox" id="t-camera" class="accent-[#EF1A2D]">
-                            <span class="text-xs font-bold text-gray-300">🎥 Caméra (Live)</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition select-none">
-                            <input type="checkbox" id="feat-lighting" class="accent-[#EF1A2D]">
-                            <span class="text-xs font-bold text-gray-300">💡 Éclairage LED</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition select-none">
-                            <input type="checkbox" id="feat-heating" class="accent-[#EF1A2D]">
-                            <span class="text-xs font-bold text-gray-300">🔥 Chauffage</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 border-t border-white/5 bg-[#0F0F0F] flex gap-4">
-                <button onclick="modals.close('terrain')" class="btn-secondary flex-1">Annuler</button>
-                <button onclick="terrainManager.save()" class="btn-primary flex-1">Enregistrer</button>
             </div>
         </div>
+
+        <div class="p-6 border-t border-white/5 bg-[#0F0F0F] flex gap-4">
+            <button onclick="modals.close('terrain')" class="btn-secondary flex-1">Annuler</button>
+            <button onclick="terrainManager.save()" class="btn-primary flex-1 bg-neon text-white font-bold">ENREGISTRER</button>
+        </div>
     </div>
+</div>
 
     <div id="modal-details" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-[#111] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl relative overflow-hidden flex flex-col animate-fade-in-up">
@@ -1075,14 +1036,14 @@
                     <label class="section-label">Nb. Utilisations Max</label>
                     <input type="number" id="promo-uses" placeholder="100" class="input-field">
                 </div>
-                <div>
-        <label class="section-label">Date Début</label>
-        <input type="date" id="promo-start" class="input-field text-gray-400">
-    </div>
-                <div>
-                    <label class="section-label">Date Expiration</label>
-                    <input type="date" id="promo-date" class="input-field text-gray-400">
-                </div>
+               <div>
+    <label class="section-label">Date & Heure Début</label>
+    <input type="datetime-local" id="promo-start" class="input-field text-gray-400">
+</div>
+<div>
+    <label class="section-label">Date & Heure Expiration</label>
+    <input type="datetime-local" id="promo-date" class="input-field text-gray-400">
+</div>
             </div>
         </div>
 
@@ -1092,7 +1053,35 @@
         </div>
     </div>
 </div>
-
+<div id="modal-vote-role" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[110] hidden flex items-center justify-center p-4">
+    <div class="bg-[#111] border border-white/10 w-full max-w-md rounded-2xl p-8">
+        <h3 class="font-orbitron font-bold text-xl text-white mb-6 uppercase">Créer un nouveau rôle</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="section-label">Nom du rôle (ex: MVP, Le Boucher)</label>
+                <input type="text" id="v-label" placeholder="🥇 MVP" class="input-field">
+            </div>
+            <div>
+                <label class="section-label">ID Technique (ex: mvp, worst)</label>
+                <input type="text" id="v-key" placeholder="mvp" class="input-field font-mono text-xs">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="section-label">Bonus/Malus XP</label>
+                    <input type="number" id="v-xp" value="10" class="input-field">
+                </div>
+                <div>
+                    <label class="section-label">Bonus/Malus Note</label>
+                    <input type="number" id="v-rate" step="0.1" value="0.5" class="input-field">
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-4 mt-8">
+            <button onclick="modals.close('vote-role')" class="btn-secondary flex-1">Annuler</button>
+            <button onclick="voteManager.create()" class="btn-primary flex-1 bg-yellow-500 text-black">Enregistrer</button>
+        </div>
+    </div>
+</div>
 
 
     <script src="/js/notifs.js"></script>

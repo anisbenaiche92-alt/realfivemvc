@@ -114,26 +114,31 @@ async function loadTerrainsForComplex(complexId) {
     });
 }
 
-    async function updateAvailability() {
-        if (!selectedTerrainId || !selectedDate) return;
+    // 1. On demande au serveur les créneaux précis (ex: 08:30, 09:00...)
+// ASSURE-TOI QUE TA FONCTION updateAvailability RESSEMBLE À ÇA :
+async function updateAvailability() {
+    if (!selectedTerrainId || !selectedDate) return;
 
-        const loader = document.getElementById('slots-loader');
-        const grid = document.getElementById('slots-grid');
-        const empty = document.getElementById('slots-empty');
+    const loader = document.getElementById('slots-loader');
+    const grid = document.getElementById('slots-grid');
+    const empty = document.getElementById('slots-empty');
 
-        loader.classList.remove('hidden');
-        grid.classList.add('hidden');
-        empty.classList.add('hidden');
+    if(loader) loader.classList.remove('hidden');
+    if(grid) grid.classList.add('hidden');
+    if(empty) empty.classList.add('hidden');
 
-        try {
-            const res = await fetch(`/api/reservations/check?terrain_id=${selectedTerrainId}&date=${selectedDate}`);
-            occupiedSlots = await res.json(); 
-            generateTimeSlots();
-            
-            loader.classList.add('hidden');
-            grid.classList.remove('hidden');
-        } catch (e) { console.error("Erreur check dispo", e); }
-    }
+    try {
+        // On appelle l'API slots
+        const res = await fetch(`/api/slots?terrainId=${selectedTerrainId}&date=${selectedDate}&duration=${selectedDuration}`);
+        const availableSlots = await res.json(); 
+        
+        // IMPORTANT : On passe le résultat à la fonction de génération
+        generateTimeSlots(availableSlots);
+        
+        if(loader) loader.classList.add('hidden');
+        if(grid) grid.classList.remove('hidden');
+    } catch (e) { console.error("Erreur check dispo", e); }
+}
 
 function setPaymentMode(mode) {
     selectedPaymentMode = mode;
@@ -211,128 +216,96 @@ function generateDates() {
         updateAvailability();
     }
 
-   function generateTimeSlots() {
+   // REMPLACE TOUTE LA FONCTION generateTimeSlots PAR CELLE-CI :
+// DANS reservation.js
+
+function generateTimeSlots(slots) {
     const grid = document.getElementById('slots-grid');
+    const empty = document.getElementById('slots-empty');
     grid.innerHTML = '';
-    
-    // Déterminer le jour de la semaine pour les heures pleines (Sam-Dim)
-    const d = new Date(selectedDate);
-    const day = d.getDay(); // 0=Dimanche, 6=Samedi
-    const isWeekend = (day === 0 || day === 6);
 
-    for(let h=8; h<=23; h++) { // Plage de 8h à 23h
-        const time = `${h}:00`;
-        
-        // --- LOGIQUE DE PRIX ---
-        // Heures Pleines : Weekend (toute la journée) ou Semaine (18h-22h)
-        const isPeak = isWeekend || (h >= 18 && h <= 22);
-        
-        let price = 0;
-        if (selectedDuration === 1) price = isPeak ? 90 : 70;
-        else if (selectedDuration === 1.5) price = isPeak ? 130 : 100;
-        else if (selectedDuration === 2) price = isPeak ? 170 : 130;
-
-        const isTaken = occupiedSlots.includes(h);
-        
-        // Gestion des conflits selon la durée
-        let durationConflict = false;
-        if (selectedDuration > 1) {
-            if (occupiedSlots.includes(h + 1) || h === 23) durationConflict = true;
-            // Pour 2h, on check aussi h+2
-            if (selectedDuration === 2 && (occupiedSlots.includes(h + 2) || h >= 22)) durationConflict = true;
-        }
-
-        const btn = document.createElement('button');
-        btn.className = 'time-slot-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border border-white/5 transition hover:border-neon';
-        
-        if (isTaken || durationConflict) {
-            btn.disabled = true;
-            btn.innerHTML = `
-                <span class="text-[10px] font-bold opacity-50">${time}</span>
-                <span class="text-[9px] text-red-500 font-black">COMPLET</span>
-            `;
-            btn.classList.add('opacity-40', 'cursor-not-allowed');
-        } else {
-            btn.onclick = () => selectTime(btn, time);
-            btn.innerHTML = `
-                <span class="text-[10px] font-bold text-gray-400">${time}</span>
-                <span class="text-xs font-orbitron font-black text-white">${price}€</span>
-            `;
-        }
-        grid.appendChild(btn);
+    if (!slots || slots.length === 0) {
+        if(empty) empty.classList.remove('hidden');
+        return;
     }
+
+   slots.forEach(slot => {
+    // On divise par 10 pour l'affichage individuel
+    const individualPrice = slot.price / 10; 
+
+    const btn = document.createElement('button');
+    btn.className = 'time-slot-btn p-3 rounded-xl flex flex-col items-center justify-center gap-1 border border-white/5 transition hover:border-neon bg-black/20';
+    
+    // On garde slot.price (le total) pour les calculs de paiement, 
+    // mais on affiche individualPrice
+    btn.onclick = () => selectTime(btn, slot.time, slot.price);
+
+    btn.innerHTML = `
+        <span class="text-[12px] font-bold text-white font-orbitron tracking-wider">${slot.time}</span>
+        <span class="text-[10px] font-bold text-gray-400">${individualPrice.toFixed(2)}€</span>
+    `;
+    
+    grid.appendChild(btn);
+});
 }
 
-  function selectTime(btn, time) {
-    document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected', 'border-neon', 'bg-neon/10'));
+// REMPLACE TOUTE LA FONCTION selectTime PAR CELLE-CI :
+function selectTime(btn, time, priceVal) {
+    // 1. Gestion visuelle de la sélection (Règle l'erreur classList)
+    document.querySelectorAll('.time-slot-btn').forEach(b => {
+        b.classList.remove('selected', 'border-neon', 'bg-neon/10');
+    });
     btn.classList.add('selected', 'border-neon', 'bg-neon/10');
+    
+    // 2. Enregistrement des données
     selectedTime = time;
     
-    // On extrait le prix directement depuis le bouton cliqué pour être sûr
-    const priceText = btn.querySelector('.text-white').innerText;
-    basePrice = parseFloat(priceText.replace('€', ''));
+    // IMPORTANT : On divise par 10 pour afficher 7€ au lieu de 70€
+    basePrice = priceVal / 10; 
     
-    document.getElementById('payment-section').classList.remove('hidden');
-    document.getElementById('booking-bar').classList.remove('translate-y-full');
+    // 3. Affichage de la barre de réservation (On ne cherche plus 'payment-section')
+    const bookingBar = document.getElementById('booking-bar');
+    if (bookingBar) {
+        bookingBar.classList.remove('translate-y-full');
+    }
+    
+    // 4. Mise à jour de l'affichage du prix
     updateBar();
 }
 
+// reservation.js
+
+// DANS reservation.js
 function updateBar() {
-    // Ici, basePrice contient déjà le prix total calculé selon la durée et le créneau
-    const total = basePrice; 
-    const splitAmount = (total / 10).toFixed(2);
-    
-    document.getElementById('split-price').innerText = splitAmount + ' €';
-    document.getElementById('full-price').innerText = total.toFixed(2) + ' €';
-    
-    const finalPrice = selectedPaymentMode === 'SPLIT' ? splitAmount : total.toFixed(2);
-    document.getElementById('display-price').innerText = finalPrice + ' €';
-    
-    if(selectedTime) {
-        const startH = parseInt(selectedTime.split(':')[0]);
-        const mode = selectedPaymentMode === 'SPLIT' ? '(Partagé)' : '(Intégral)';
-        document.getElementById('selection-summary').innerText = `${selectedTerrainName} • ${startH}h (${selectedDuration}h) ${mode}`;
+    // On affiche le prix pour 1 personne (ex: 7.00 €)
+    const displayPriceEl = document.getElementById('display-price');
+    if (displayPriceEl) {
+        displayPriceEl.innerText = basePrice.toFixed(2) + ' €';
+    }
+
+    if (selectedTime) {
+        const summaryEl = document.getElementById('selection-summary');
+        if (summaryEl) {
+            summaryEl.innerText = `${selectedTerrainName} • ${selectedTime} (1 place)`;
+        }
     }
 }
-
-   function updateBar() {
-    const total = basePrice * selectedDuration;
-    const splitAmount = (total / 10).toFixed(2);
-    
-    // Mise à jour des prix affichés
-    document.getElementById('split-price').innerText = splitAmount + ' €';
-    document.getElementById('full-price').innerText = total.toFixed(2) + ' €';
-    
-    // Prix final selon le mode
-    const finalPrice = selectedPaymentMode === 'SPLIT' ? splitAmount : total.toFixed(2);
-    document.getElementById('display-price').innerText = finalPrice + ' €';
-    
-    if(selectedTime) {
-        const startH = parseInt(selectedTime.split(':')[0]);
-        const mode = selectedPaymentMode === 'SPLIT' ? '(Paiement Partagé)' : '(Paiement Intégral)';
-        document.getElementById('selection-summary').innerText = `${selectedTerrainName} • ${selectedDate} • ${startH}h-${startH+selectedDuration}h ${mode}`;
-    }
-}
-
   // DANS RESERVATION.HTML
 
 function confirmBooking() {
-    // On ne contacte plus le serveur ici. On passe juste les infos à la page suivante.
     if(!selectedTerrainId || !selectedDate || !selectedTime) {
         alert("Veuillez sélectionner un terrain, une date et une heure.");
         return;
     }
 
-    // On construit l'URL avec toutes les infos nécessaires pour la création future
     const params = new URLSearchParams({
-        mode: 'creation', // Pour dire à la page paiement que c'est une nouvelle créa
+        mode: 'creation',
         terrainId: selectedTerrainId,
-        terrainName: selectedTerrainName, // On passe le nom pour l'affichage
+        terrainName: selectedTerrainName,
         date: selectedDate,
         time: selectedTime,
         duration: selectedDuration,
-        paymentMode: selectedPaymentMode,
-        price: basePrice * selectedDuration // Juste pour l'affichage, le backend recalculera
+        unitPrice: basePrice.toFixed(2) // Envoie 7.00
     });
 
     window.location.href = '/payment.html?' + params.toString();

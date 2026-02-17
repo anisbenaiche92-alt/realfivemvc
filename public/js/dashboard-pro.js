@@ -18,17 +18,17 @@ const state = {
 // ==========================================
 const router = {
     navigate: (viewId) => {
-        // Masquer toutes les vues
+        // 1. Masquer toutes les vues
         document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById(`view-${viewId}`);
         if(target) target.classList.remove('hidden');
 
-        // Mettre à jour la navigation
+        // 2. Mettre à jour le menu (sidebar)
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         const navBtn = document.getElementById(`nav-${viewId}`);
         if(navBtn) navBtn.classList.add('active');
 
-        // Titres
+        // 3. Titres de page
         const titles = {
             'dashboard': 'VUE GLOBALE',
             'calendar': 'PLANNING',
@@ -36,19 +36,25 @@ const router = {
             'terrains': 'PARC TERRAINS',
             'finance': 'COMPTABILITÉ',
             'marketing': 'MARKETING & PROMOS',
-            'sanctions': 'GESTION SANCTIONS', // NOUVEAU
+            'sanctions': 'GESTION SANCTIONS',
             'settings': 'CONFIGURATION'
         };
         document.getElementById('page-title').innerText = titles[viewId] || 'DASHBOARD';
         
-        // Chargement des données
+        // 4. CHARGEMENT DES DONNÉES (C'est ici qu'on règle la synchro)
         if(viewId === 'dashboard') analytics.loadStats();
-       if(viewId === 'calendar') calendarManager.init();
+        if(viewId === 'calendar') calendarManager.init();
         if(viewId === 'crm') crm.load();
         if(viewId === 'terrains') terrainManager.load();
         if(viewId === 'finance') financeManager.load();
-        if(viewId === 'marketing') marketingManager.load();
-        if(viewId === 'sanctions') sanctionsManager.load(); // NOUVEAU
+        if(viewId === 'marketing') {
+            marketingManager.load();
+            voteManager.load();
+        }
+        if(viewId === 'sanctions') sanctionsManager.load();
+        
+        // --- LA LIGNE MAGIQUE POUR TES RÉGLAGES ---
+        if(viewId === 'settings') settingsManager.init(); 
 
         state.currentView = viewId;
         localStorage.setItem('lastView', viewId);
@@ -56,11 +62,10 @@ const router = {
 
     init: () => {
         console.log("🚀 Initialisation du Dashboard...");
-        // Charger les données de base
         analytics.loadStats();
-        calendarManager.init();
-        // Aller sur la vue par défaut
-        router.navigate('dashboard');
+        // On récupère la dernière vue visitée ou dashboard par défaut
+        const lastView = localStorage.getItem('lastView') || 'dashboard';
+        router.navigate(lastView);
     }
 };
 // ==========================================
@@ -680,120 +685,129 @@ const terrainManager = {
             <span class="font-bold text-gray-500 group-hover:text-white uppercase text-xs tracking-widest">Ajouter un Terrain</span>
         </div>`;
 
-        html += terrains.map(t => {
-            const isMaint = t.maintenance_status !== 'AVAILABLE';
-            // Parsing des features (JSON ou string)
-            let feats = { lighting: false, heating: false };
-            try { feats = typeof t.features === 'string' ? JSON.parse(t.features) : t.features || {}; } catch(e){}
-
-              return `
-            <div class="glass-card p-6 relative overflow-hidden group">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-1 rounded uppercase backdrop-blur-md border border-white/5">${t.sport_type}</span>
-                    <div class="flex gap-2">
-                        ${t.is_indoor ? '<span title="Indoor" class="text-gray-500"><i class="fa-solid fa-warehouse"></i></span>' : '<span title="Outdoor" class="text-yellow-500"><i class="fa-solid fa-sun"></i></span>'}
-                        ${t.has_camera ? '<span title="Caméra" class="text-red-500 animate-pulse"><i class="fa-solid fa-video"></i></span>' : ''}
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-orbitron font-bold text-xl text-white mb-1 truncate">${t.name}</h3>
-                    <p class="text-xs text-gray-400 font-mono">${t.surface_type || 'Surface Standard'}</p>
-                </div>
-
-                <div class="flex items-end justify-between border-t border-white/10 pt-4">
-                    <div>
-                        <div class="font-orbitron font-bold text-xl text-[#4DFF99]">${t.hourly_rate}€</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">${isMaint ? '🔴 Maintenance' : '🟢 Disponible'}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="terrainManager.openModal(${t.id})" class="w-8 h-8 rounded bg-white/5 hover:bg-white/20 text-white transition flex items-center justify-center" title="Modifier">
-                            <i class="fa-solid fa-pen text-xs"></i>
-                        </button>
-                        <button onclick="terrainManager.toggleMaint(${t.id}, '${isMaint ? 'AVAILABLE' : 'MAINTENANCE'}')" class="w-8 h-8 rounded bg-white/5 hover:bg-white/20 ${isMaint ? 'text-red-500' : 'text-gray-400'} transition flex items-center justify-center" title="Maintenance">
-                            <i class="fa-solid fa-wrench text-xs"></i>
-                        </button>
-                        <button onclick="terrainManager.delete(${t.id})" class="w-8 h-8 rounded bg-red-500/10 hover:bg-red-500/20 text-red-500 transition flex items-center justify-center" title="Supprimer">
-                            <i class="fa-solid fa-trash text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
+html += terrains.map(t => `
+    <div class="glass-card p-6 relative overflow-hidden group">
+        <div class="mb-6">
+            <h3 class="font-orbitron font-bold text-xl text-white mb-1 truncate">${t.name}</h3>
+            <p class="text-[10px] text-gray-500 uppercase font-mono">${t.sport_type} • ${t.surface_type || 'Surface Standard'}</p>
+        </div>
+        <div class="flex items-end justify-between border-t border-white/10 pt-4">
+            <div>
+                <div class="text-[10px] text-gray-500 uppercase font-black mb-1">Tarifs 1H (Creuse/Pleine)</div>
+                <div class="font-orbitron font-bold text-lg text-[#EF1A2D]">${t.p_creuse_1h}€ / ${t.p_pleine_1h}€</div>
+            </div>
+            <button onclick="terrainManager.openModal(${t.id})" class="w-8 h-8 rounded bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+        </div>
+    </div>`).join('');
         grid.innerHTML = html;
     },
     
-    openModal: (id = null) => {
-        const modal = document.getElementById('modal-terrain');
-        const title = document.getElementById('modal-terrain-title');
+    // 2. OUVERTURE DE LA MODALE (C'est ici que le Crayon se répare)
+openModal: (id = null) => {
+    const title = document.getElementById('modal-terrain-title');
+    
+    // 1. Reset de tous les champs
+    document.getElementById('terrain-id').value = '';
+    document.getElementById('t-name').value = '';
+    
+    // Reset des 9 prix de la grille
+    const priceFields = [
+        'p-creuse-1h', 'p-creuse-1h30', 'p-creuse-2h',
+        'p-pleine-1h', 'p-pleine-1h30', 'p-pleine-2h',
+        'p-weekend-1h', 'p-weekend-1h30', 'p-weekend-2h'
+    ];
+    priceFields.forEach(field => {
+        const el = document.getElementById(field);
+        if(el) el.value = '';
+    });
+
+    if(id) {
+        const t = state.terrains.find(x => x.id === id);
+        if(!t) return;
+
+        title.innerText = "MODIFIER LE TERRAIN";
+        document.getElementById('terrain-id').value = t.id;
+        document.getElementById('t-name').value = t.name;
+        document.getElementById('t-sport').value = t.sport_type;
+        document.getElementById('t-surface').value = t.surface_type || 'Synthétique';
+        document.getElementById('t-indoor').value = t.is_indoor ? "1" : "0";
+
+        // 2. REMPLISSAGE DE LA GRILLE (C'est ici que ça se répare)
+        // On utilise les noms de colonnes de ta BDD
+        if(document.getElementById('p-creuse-1h')) document.getElementById('p-creuse-1h').value = t.p_creuse_1h;
+        if(document.getElementById('p-creuse-1h30')) document.getElementById('p-creuse-1h30').value = t.p_creuse_1h30;
+        if(document.getElementById('p-creuse-2h')) document.getElementById('p-creuse-2h').value = t.p_creuse_2h;
         
-        // Reset form
-        document.getElementById('terrain-id').value = '';
-        document.getElementById('t-name').value = '';
-        document.getElementById('t-price').value = '';
-        document.getElementById('t-camera').checked = false;
-        document.getElementById('feat-lighting').checked = false;
-        document.getElementById('feat-heating').checked = false;
+        if(document.getElementById('p-pleine-1h')) document.getElementById('p-pleine-1h').value = t.p_pleine_1h;
+        if(document.getElementById('p-pleine-1h30')) document.getElementById('p-pleine-1h30').value = t.p_pleine_1h30;
+        if(document.getElementById('p-pleine-2h')) document.getElementById('p-pleine-2h').value = t.p_pleine_2h;
         
-        if(id) {
-            const t = state.terrains.find(x => x.id === id);
-            title.innerText = "MODIFIER TERRAIN";
-            document.getElementById('terrain-id').value = t.id;
-            document.getElementById('t-name').value = t.name;
-            document.getElementById('t-sport').value = t.sport_type;
-            document.getElementById('t-price').value = t.hourly_rate;
-            document.getElementById('t-surface').value = t.surface_type || 'Synthétique';
-            document.getElementById('t-indoor').value = t.is_indoor ? "1" : "0";
-            document.getElementById('t-camera').checked = !!t.has_camera;
-            
+        if(document.getElementById('p-weekend-1h')) document.getElementById('p-weekend-1h').value = t.p_weekend_1h;
+        if(document.getElementById('p-weekend-1h30')) document.getElementById('p-weekend-1h30').value = t.p_weekend_1h30;
+        if(document.getElementById('p-weekend-2h')) document.getElementById('p-weekend-2h').value = t.p_weekend_2h;
+
+        document.getElementById('t-camera').checked = !!t.has_camera;
+        // On vérifie si feat-lighting existe avant de cocher
+        if(document.getElementById('feat-lighting')) {
             let f = {};
             try { f = typeof t.features === 'string' ? JSON.parse(t.features) : t.features || {}; } catch(e){}
             document.getElementById('feat-lighting').checked = !!f.lighting;
-            document.getElementById('feat-heating').checked = !!f.heating;
-        } else {
-            title.innerText = "AJOUTER TERRAIN";
+            if(document.getElementById('feat-heating')) document.getElementById('feat-heating').checked = !!f.heating;
         }
-        
-        modals.open('terrain');
-    },
+    } else {
+        title.innerText = "AJOUTER UN TERRAIN";
+    }
+    modals.open('terrain');
+},
 
-    save: async () => {
-        const id = document.getElementById('terrain-id').value;
-        const payload = {
-            name: document.getElementById('t-name').value,
-            sport_type: document.getElementById('t-sport').value,
-            hourly_rate: document.getElementById('t-price').value,
-            surface_type: document.getElementById('t-surface').value,
-            is_indoor: document.getElementById('t-indoor').value === "1" ? 1 : 0,
-            has_camera: document.getElementById('t-camera').checked ? 1 : 0,
-            features: {
-                lighting: document.getElementById('feat-lighting').checked ? 1 : 0,
-                heating: document.getElementById('feat-heating').checked ? 1 : 0
-            }
-        };
+    // 3. SAUVEGARDE (Envoi des prix à la BDD)
+   // DANS dashboard-pro.js -> terrainManager
+save: async () => {
+    const id = document.getElementById('terrain-id').value;
+    const payload = {
+        name: document.getElementById('t-name').value,
+        sport_type: document.getElementById('t-sport').value,
+        surface_type: document.getElementById('t-surface').value,
+        is_indoor: document.getElementById('t-indoor').value === "1" ? 1 : 0,
+        has_camera: document.getElementById('t-camera').checked ? 1 : 0,
+        // ENVOI DES 9 TARIFS
+        p_creuse_1h: document.getElementById('p-creuse-1h').value,
+        p_creuse_1h30: document.getElementById('p-creuse-1h30').value,
+        p_creuse_2h: document.getElementById('p-creuse-2h').value,
+        p_pleine_1h: document.getElementById('p-pleine-1h').value,
+        p_pleine_1h30: document.getElementById('p-pleine-1h30').value,
+        p_pleine_2h: document.getElementById('p-pleine-2h').value,
+        p_weekend_1h: document.getElementById('p-weekend-1h').value,
+        p_weekend_1h30: document.getElementById('p-weekend-1h30').value,
+        p_weekend_2h: document.getElementById('p-weekend-2h').value,
+        features: {
+            lighting: document.getElementById('feat-lighting')?.checked ? 1 : 0,
+            heating: document.getElementById('feat-heating')?.checked ? 1 : 0
+        }
+    };
 
-        if(!payload.name || !payload.hourly_rate) return alert("Nom et Prix requis");
+    const url = id ? `/api/admin/terrains/${id}` : '/api/admin/terrains/add';
+    const method = id ? 'PUT' : 'POST';
 
-        const url = id ? `/api/admin/terrains/${id}` : '/api/admin/terrains/add';
-        const method = id ? 'PUT' : 'POST';
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(data.success) {
+            modals.close('terrain');
+            terrainManager.load();
+            utils.toast('success', 'Tarifs et terrain enregistrés !');
+        } else {
+            alert("Erreur: " + data.error);
+        }
+    } catch(e) { console.error(e); }
+},
 
-        try {
-            const res = await fetch(url, {
-                method: method,
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            
-            if(data.success) {
-                modals.close('terrain');
-                terrainManager.load();
-                utils.toast('Succès', 'Terrain enregistré');
-            } else {
-                alert("Erreur: " + data.error);
-            }
-        } catch(e) { console.error(e); }
-    },
 
     toggleMaint: async (id, status) => {
         if(!confirm(`Confirmer ${status === 'MAINTENANCE' ? 'la maintenance' : 'la réouverture'} ?`)) return;
@@ -1056,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // A AJOUTER COMME NOUVEL OBJET MANAGER
 
 const marketingManager = {
-    // 1. CHARGEMENT DES CODES PROMOS
+    // 1. CHARGEMENT DES CODES PROMOS (AVEC HEURES ET NOUVELLE COLONNE)
     load: async () => {
         try {
             const res = await fetch('/api/admin/marketing/promos');
@@ -1064,9 +1078,18 @@ const marketingManager = {
             const tbody = document.getElementById('promo-table-body');
             
             if (!promos || promos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500 italic">Aucun code promo actif actuellement.</td></tr>';
+                // Colspan à 6 car on a ajouté une colonne
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Aucun code promo actif actuellement.</td></tr>';
                 return;
             }
+
+            // Fonction pour afficher Date + Heure proprement (ex: 14/02 18:30)
+            const formatDT = (d) => d ? new Date(d).toLocaleString('fr-FR', {
+                day: '2-digit', 
+                month: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit'
+            }) : '--:--';
 
             tbody.innerHTML = promos.map(p => {
                 let valueDisplay, tagColor;
@@ -1086,8 +1109,7 @@ const marketingManager = {
                     <td class="p-4"><span class="font-bold text-white font-mono bg-white/5 px-3 py-1 rounded border border-white/10">${p.code}</span></td>
                     <td class="p-4"><span class="text-xs font-bold px-2 py-1 rounded ${tagColor}">${valueDisplay}</span></td>
                     <td class="p-4 text-xs text-gray-300"><span>${p.current_uses}</span> / ${p.max_uses}</td>
-                    <td class="p-4 text-xs text-gray-400">${new Date(p.expires_at).toLocaleDateString('fr-FR')}</td>
-                    <td class="p-4 text-right">
+                    <td class="p-4 text-[10px] text-gray-400 font-mono">${formatDT(p.starts_at)}</td> <td class="p-4 text-[10px] text-gray-400 font-mono">${formatDT(p.expires_at)}</td> <td class="p-4 text-right">
                         <button onclick="marketingManager.delete(${p.id})" class="w-8 h-8 rounded bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition flex items-center justify-center ml-auto">
                             <i class="fa-solid fa-trash text-xs"></i>
                         </button>
@@ -1097,43 +1119,47 @@ const marketingManager = {
         } catch(e) { console.error("Erreur chargement promos", e); }
     },
 
- // 2. CRÉATION D'UN CODE PROMO 
-create: async () => {
-    const code = document.getElementById('promo-code').value.toUpperCase();
-    const type = document.getElementById('promo-type').value;
-    const value = document.getElementById('promo-value').value;
-    const max_uses = document.getElementById('promo-uses').value;
-    const starts_at = document.getElementById('promo-start').value; // Nouveau
-    const expires_at = document.getElementById('promo-date').value;
+    // 2. CRÉATION D'UN CODE PROMO (AVEC DATE ET HEURE)
+    create: async () => {
+        const code = document.getElementById('promo-code').value.toUpperCase();
+        const type = document.getElementById('promo-type').value;
+        const value = document.getElementById('promo-value').value;
+        const max_uses = document.getElementById('promo-uses').value;
+        const starts_at = document.getElementById('promo-start').value; // Récupère Date + Heure
+        const expires_at = document.getElementById('promo-date').value;  // Récupère Date + Heure
 
-    // Validation : on vérifie que la date de début est aussi présente
-    if(!code || !value || !max_uses || !starts_at || !expires_at) {
-        return alert("Veuillez remplir tous les champs, y compris la date de début.");
-    }
-
-    try {
-        const res = await fetch('/api/admin/marketing/promos', {
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'},
-            // On envoie starts_at dans le corps de la requête
-            body: JSON.stringify({ code, type, value, max_uses, starts_at, expires_at })
-        });
-        const data = await res.json();
-        if(data.success) {
-            modals.close('promo');
-            marketingManager.load();
-            utils.toast('Succès', 'Code Promo créé !');
+        if(!code || !value || !max_uses || !starts_at || !expires_at) {
+            return alert("Veuillez remplir tous les champs, y compris les heures de début et de fin.");
         }
-    } catch(e) { 
-        alert("Erreur serveur"); 
-    }
-},
+
+        try {
+            const res = await fetch('/api/admin/marketing/promos', {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ code, type, value, max_uses, starts_at, expires_at })
+            });
+            const data = await res.json();
+            if(data.success) {
+                modals.close('promo');
+                marketingManager.load();
+                utils.toast('Succès', 'Code Promo créé avec succès !');
+            }
+        } catch(e) { 
+            alert("Erreur lors de la création"); 
+        }
+    },
 
     // 3. SUPPRESSION D'UN CODE PROMO
     delete: async (id) => {
         if(!confirm("Supprimer définitivement ce code promo ?")) return;
-        await fetch(`/api/admin/marketing/promos/${id}`, { method: 'DELETE' });
-        marketingManager.load();
+        try {
+            const res = await fetch(`/api/admin/marketing/promos/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if(data.success) {
+                marketingManager.load();
+                utils.toast('Succès', 'Code supprimé');
+            }
+        } catch(e) { console.error(e); }
     },
 
     // 4. AJOUTER UNE LIGNE DE PALIER (FIDÉLITÉ)
@@ -1180,81 +1206,81 @@ create: async () => {
 
 
 // ==========================================
-// SETTINGS MANAGER
+// SETTINGS MANAGER (VERSION SÉCURISÉE)
 // ==========================================
+// ==========================================
+// SETTINGS MANAGER (VERSION FINALE SÉCURISÉE)
+// ==========================================
+// DANS dashboard-pro.js
 const settingsManager = {
-    saveComplexInfo: async () => {
-        const data = {
-            name: document.getElementById('settings-name').value,
-            phone: document.getElementById('settings-phone').value,
-            address: document.getElementById('settings-address').value,
-            email: document.getElementById('settings-email').value,
-            website: document.getElementById('settings-website').value
-        };
-        
+    init: async () => {
         try {
-            const res = await fetch('/api/admin/my-complex', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            if(result.success) {
-                utils.toast('success', 'Informations sauvegardées');
-            }
-        } catch(e) {
-            utils.toast('error', 'Erreur de sauvegarde');
+            const res = await fetch('/api/admin/my-complex');
+            const data = await res.json();
+            
+            // Mapping complet BDD -> HTML
+            document.getElementById('settings-name').value = data.name || '';
+            document.getElementById('settings-desc').value = data.description || '';
+            document.getElementById('settings-phone').value = data.phone_contact || '';
+            document.getElementById('settings-email').value = data.email || '';
+            document.getElementById('settings-address').value = data.address || '';
+            document.getElementById('settings-city').value = data.city || '';
+            document.getElementById('settings-zip').value = data.zip_code || '';
+            document.getElementById('settings-website').value = data.website || '';
+            
+            // On garde les URLs actuelles en mémoire
+            state.currentLogo = data.logo_url;
+            state.currentCover = data.cover_image_url;
+
+            const formatTime = (t) => t ? t.substring(0,5) : '';
+            document.getElementById('complex-open').value = formatTime(data.open_time);
+            document.getElementById('complex-close').value = formatTime(data.close_time);
+            document.getElementById('peak-start').value = formatTime(data.peak_start);
+            document.getElementById('peak-end').value = formatTime(data.peak_end);
+
+        } catch (e) { console.error("Erreur Init", e); }
+    },
+
+    save: async () => {
+        const formData = new FormData();
+        
+        // Données texte
+        const fields = {
+            name: 'settings-name', description: 'settings-desc', phone: 'settings-phone',
+            email: 'settings-email', address: 'settings-address', city: 'settings-city',
+            zip_code: 'settings-zip', website: 'settings-website',
+            open_time: 'complex-open', close_time: 'complex-close',
+            peak_start: 'peak-start', peak_end: 'peak-end'
+        };
+
+        for (let key in fields) {
+            formData.append(key, document.getElementById(fields[key]).value);
+        }
+        
+        formData.append('existing_logo_url', state.currentLogo || '');
+        formData.append('existing_cover_url', state.currentCover || '');
+
+        // Fichiers (Pièces jointes)
+        const logoFile = document.getElementById('file-logo').files[0];
+        const coverFile = document.getElementById('file-cover').files[0];
+        if(logoFile) formData.append('logo', logoFile);
+        if(coverFile) formData.append('cover', coverFile);
+
+        const res = await fetch('/api/admin/my-complex', {
+            method: 'POST',
+            body: formData // PAS DE HEADERS ICI !
+        });
+
+        if(res.ok) {
+            utils.toast('Succès', 'Configuration et images synchronisées !');
+            settingsManager.init();
+        } else {
+            utils.toast('Erreur', 'Le serveur a refusé la mise à jour (Erreur 500)');
         }
     },
-
-    saveHours: async () => {
-        utils.toast('success', 'Horaires sauvegardés');
-    },
-
-    savePricing: async () => {
-        const data = {
-            price_day: document.getElementById('settings-price-day').value,
-            price_night: document.getElementById('settings-price-night').value,
-            price_weekend: document.getElementById('settings-price-weekend').value
-        };
-        
-        try {
-            const res = await fetch('/api/admin/pricing/simple', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            utils.toast('success', 'Tarifs sauvegardés');
-        } catch(e) {
-            utils.toast('error', 'Erreur de sauvegarde');
-        }
-    },
-
-    savePreferences: async () => {
-        utils.toast('success', 'Préférences sauvegardées');
-    },
-
-    addAdmin: () => {
-        utils.toast('info', 'Fonctionnalité en cours de développement');
-    },
-
-    exportAllData: () => {
-        utils.toast('info', 'Export en cours...');
-    },
-
-    exportReservations: () => {
-        calendarManager.exportView();
-    },
-
-    exportClients: async () => {
-        utils.toast('info', 'Export clients en cours...');
-    },
-
-    exportFinances: async () => {
-        utils.toast('info', 'Export finances en cours...');
-    }
+    saveComplexInfo: () => settingsManager.save(),
+    saveHours: () => settingsManager.save()
 };
-
 
 
 // === SANCTIONS MANAGER === //
@@ -1302,10 +1328,13 @@ const sanctionsManager = {
     
     create: async () => {
         const payload = {
-            user_id: document.getElementById('sanction-player').value,
-            reason: document.getElementById('sanction-reason').value,
-            ban_type: document.getElementById('sanction-type').value,
-            end_date: document.getElementById('sanction-end-date').value || null
+    name: document.getElementById('t-name').value,
+    type: document.getElementById('t-type').value,
+    // On enregistre les 3 tarifs par personne pour ce terrain
+    price_creuse: document.getElementById('t-price-creuse').value,
+    price_pleine: document.getElementById('t-price-pleine').value,
+    price_weekend: document.getElementById('t-price-weekend').value,
+    hourly_rate: document.getElementById('t-price-creuse').value // Pour la compatibilité
         };
         
         if(!payload.user_id || !payload.reason) {
@@ -1372,4 +1401,58 @@ setInterval(() => {
         // C'est cette commande qui va re-déclencher la fonction 'events' ci-dessus
         state.calendarInstance.refetchEvents(); 
     }
-}, 10000); // Réduit à 10s pour plus de réactivité (au lieu de 30s)
+}, 10000); // Réduit à 10s pour plus de réactivité (au lieu de 30s)ù
+
+
+
+const voteManager = {
+    load: async () => {
+        try {
+            const res = await fetch('/api/admin/vote-roles');
+            const roles = await res.json();
+            const tbody = document.getElementById('vote-roles-table-body');
+            
+            tbody.innerHTML = roles.map(r => `
+                <tr class="hover:bg-white/5 transition">
+                    <td class="p-4 font-bold text-white">${r.label}</td>
+                    <td class="p-4 font-mono text-[10px] text-gray-500">${r.category_key}</td>
+                    <td class="p-4 text-center ${r.xp_bonus < 0 ? 'text-red-500' : 'text-[#4DFF99]'} font-bold">${r.xp_bonus} XP</td>
+                    <td class="p-4 text-center font-bold">${r.rating_bonus > 0 ? '+' : ''}${r.rating_bonus}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="voteManager.delete(${r.id})" class="text-red-500 hover:text-white p-2">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) { console.error("Erreur chargement rôles", e); }
+    },
+
+    create: async () => {
+        const label = document.getElementById('v-label').value;
+        const category_key = document.getElementById('v-key').value;
+        const xp_bonus = document.getElementById('v-xp').value;
+        const rating_bonus = document.getElementById('v-rate').value;
+
+        await fetch('/api/admin/vote-roles', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ label, category_key, xp_bonus, rating_bonus })
+        });
+        
+        modals.close('vote-role');
+        voteManager.load();
+        utils.toast('Succès', 'Nouveau rôle de vote activé !');
+    },
+
+    delete: async (id) => {
+        if(!confirm("Supprimer ce rôle ?")) return;
+        await fetch(`/api/admin/vote-roles/${id}`, { method: 'DELETE' });
+        voteManager.load();
+    }
+};
+
+// AJOUTE CETTE LIGNE dans ton router.navigate('marketing') pour que ça charge auto
+// voteManager.load();
+
+

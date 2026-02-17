@@ -47,3 +47,14 @@
     }
 
     #booking-bar { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
+
+/* Empêche la barre de cacher le contenu du bas */
+main {
+    padding-bottom: 120px !important; /* Marge pour laisser la barre respirer */
+}
+
+/* Animation fluide pour l'apparition de la barre */
+#booking-bar.show {
+    transform: translateY(0);
+}
