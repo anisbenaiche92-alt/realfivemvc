@@ -341,41 +341,55 @@ exports.getMyComplex = async (req, res) => {
 // DANS adminController.js
 exports.updateComplex = async (req, res) => {
     try {
-        const [complexRows] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [req.session.user.id]);
-        if (!complexRows.length) return res.status(404).json({ error: "Complexe non trouvé" });
-        const complexId = complexRows[0].id;
+        const userId = req.session.user.id;
+        
+        // 1. On vérifie si l'admin a déjà un complexe
+        const [complexRows] = await db.query('SELECT id FROM complexes WHERE owner_id = ?', [userId]);
+        
+        const d = req.body;
+        const f = req.files;
 
-        const d = req.body; // Données texte (Nom, Email, etc.)
-        const f = req.files; // Fichiers (Logo, Cover)
-
-        // Gestion des images (Pièces jointes)
-        // On garde l'ancienne URL si pas de nouveau fichier envoyé
+        // Gestion des images (on garde l'ancienne si pas de nouvelle)
         let logoPath = d.existing_logo_url || null;
         let coverPath = d.existing_cover_url || null;
-
+        
         if (f && f['logo']) logoPath = '/uploads/' + f['logo'][0].filename;
         if (f && f['cover']) coverPath = '/uploads/' + f['cover'][0].filename;
 
-        // MISE À JOUR DE TOUS LES CHAMPS (29 paramètres synchronisés)
-        await db.query(
-            `UPDATE complexes SET 
-                name=?, description=?, address=?, city=?, zip_code=?, 
-                phone_contact=?, email=?, website=?,
-                open_time=?, close_time=?, peak_start=?, peak_end=?,
-                logo_url=?, cover_image_url=?, complexe_image_url=?
-             WHERE id=?`,
-            [
-                d.name, d.description, d.address, d.city, d.zip_code,
-                d.phone, d.email, d.website,
-                d.open_time, d.close_time, d.peak_start, d.peak_end,
-                logoPath, coverPath, coverPath, // On met à jour les deux champs cover
-                complexId
-            ]
-        );
+        if (complexRows.length > 0) {
+            // --- CAS 1 : LE COMPLEXE EXISTE -> MISE À JOUR (UPDATE) ---
+            const complexId = complexRows[0].id;
+            await db.query(
+                `UPDATE complexes SET 
+                    name=?, description=?, address=?, city=?, zip_code=?, 
+                    phone_contact=?, email=?, website=?,
+                    open_time=?, close_time=?, peak_start=?, peak_end=?,
+                    logo_url=?, cover_image_url=?, complexe_image_url=?
+                 WHERE id=?`,
+                [
+                    d.name, d.description, d.address, d.city, d.zip_code,
+                    d.phone, d.email, d.website, d.open_time, d.close_time, 
+                    d.peak_start, d.peak_end, logoPath, coverPath, coverPath, complexId
+                ]
+            );
+        } else {
+            // --- CAS 2 : NOUVEL ADMIN -> CRÉATION (INSERT) ---
+            await db.query(
+                `INSERT INTO complexes 
+                (owner_id, name, description, address, city, zip_code, phone_contact, email, website, 
+                 open_time, close_time, peak_start, peak_end, logo_url, cover_image_url, complexe_image_url) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    userId, d.name, d.description, d.address, d.city, d.zip_code,
+                    d.phone, d.email, d.website, d.open_time, d.close_time, 
+                    d.peak_start, d.peak_end, logoPath, coverPath, coverPath
+                ]
+            );
+        }
         res.json({ success: true });
     } catch (e) {
-        console.error("Crash SQL:", e);
-        res.status(500).json({ error: "Erreur serveur" });
+        console.error("Crash updateComplex:", e);
+        res.status(500).json({ error: "Erreur lors de l'enregistrement du complexe" });
     }
 };
 // ==========================================
@@ -669,4 +683,28 @@ exports.deleteVoteRole = async (req, res) => {
         await db.query('DELETE FROM vote_roles_config WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: "Erreur suppression" }); }
+};
+
+
+// DANS adminController.js
+exports.toggleComplexStatus = async (req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { isMaintenance } = req.body;
+
+        // LOGIQUE : 
+        // Si isMaintenance est coché (true) -> is_validated = 0 (Masqué)
+        // Si isMaintenance est décoché (false) -> is_validated = 1 (Visible)
+        const isValidated = isMaintenance ? 0 : 1;
+
+        await db.query(
+            'UPDATE complexes SET is_validated = ? WHERE owner_id = ?',
+            [isValidated, userId]
+        );
+        
+        res.json({ success: true, newState: isValidated });
+    } catch (e) {
+        console.error("Erreur toggle:", e);
+        res.status(500).json({ error: "Erreur lors du changement de statut" });
+    }
 };

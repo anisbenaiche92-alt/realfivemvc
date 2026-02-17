@@ -6,7 +6,7 @@ const mainController = require('../controllers/mainController');
 // --- AJOUTE CES DEUX LIGNES ICI ---
 const adminController = require('../controllers/adminController');
 const authController = require('../controllers/authController');
-
+const upload = require('../middlewares/multer-config'); // <--- INDISPENSABLE POUR LES IMAGES
 const { isAuthenticated } = require('../middlewares/auth');
 
 // --- PUBLIC ---
@@ -14,10 +14,22 @@ router.get('/api/settings', mainController.getSettings);
 router.post('/api/settings', mainController.updateSettings);
 router.get('/api/complexes', mainController.getComplexes);
 router.get('/api/complexes/:id/terrains', mainController.getComplexTerrains);
+
 router.get('/api/pricing-rules/:complexId', mainController.getPricingRulesPublic);
 
 // --- AUTH (Toutes les routes en dessous demandent d'être connecté) ---
 router.use(isAuthenticated); 
+
+// --- GESTION DU COMPLEXE (ADMIN) ---
+// Route pour récupérer les infos actuelles du complexe
+router.get('/api/admin/my-complex', adminController.getMyComplex);
+
+// Route pour créer ou mettre à jour le complexe (avec gestion du Logo et de la Cover)
+router.post('/api/admin/my-complex', upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'cover', maxCount: 1 }
+]), adminController.updateComplex);
+router.post('/api/admin/my-complex/toggle', adminController.toggleComplexStatus);
 
 // --- SECTION FIDÉLITÉ & STATS (NOUVEAU) ---
 // Récupère les stats et la carte de fidélité pour le joueur

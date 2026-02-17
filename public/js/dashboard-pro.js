@@ -1218,7 +1218,7 @@ const settingsManager = {
             const res = await fetch('/api/admin/my-complex');
             const data = await res.json();
             
-            // Mapping complet BDD -> HTML
+            // 1. Remplissage des champs texte classiques
             document.getElementById('settings-name').value = data.name || '';
             document.getElementById('settings-desc').value = data.description || '';
             document.getElementById('settings-phone').value = data.phone_contact || '';
@@ -1228,7 +1228,6 @@ const settingsManager = {
             document.getElementById('settings-zip').value = data.zip_code || '';
             document.getElementById('settings-website').value = data.website || '';
             
-            // On garde les URLs actuelles en mémoire
             state.currentLogo = data.logo_url;
             state.currentCover = data.cover_image_url;
 
@@ -1238,13 +1237,39 @@ const settingsManager = {
             document.getElementById('peak-start').value = formatTime(data.peak_start);
             document.getElementById('peak-end').value = formatTime(data.peak_end);
 
-        } catch (e) { console.error("Erreur Init", e); }
+            // --- AJOUT : CHARGEMENT DU MODE MAINTENANCE ---
+            const maintenanceToggle = document.getElementById('maintenance-mode');
+            if(maintenanceToggle) {
+                // Si is_validated est 0, le mode maintenance est ACTIVÉ (coché)
+                maintenanceToggle.checked = (data.is_validated === 0);
+            }
+
+        } catch (e) { console.error("Erreur Init Settings", e); }
+    },
+
+    // Cette fonction est appelée par le bouton "Enregistrer les préférences" du HTML
+    savePreferences: async () => {
+        const isMaintenance = document.getElementById('maintenance-mode').checked;
+        
+        try {
+            const res = await fetch('/api/admin/my-complex/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ isMaintenance: isMaintenance })
+            });
+            const data = await res.json();
+            
+            if(data.success) {
+                const msg = isMaintenance ? 'Complexe en maintenance (Masqué)' : 'Complexe ouvert (Visible)';
+                utils.toast('Succès', msg);
+            }
+        } catch (e) { 
+            utils.toast('Erreur', 'Action impossible'); 
+        }
     },
 
     save: async () => {
         const formData = new FormData();
-        
-        // Données texte
         const fields = {
             name: 'settings-name', description: 'settings-desc', phone: 'settings-phone',
             email: 'settings-email', address: 'settings-address', city: 'settings-city',
@@ -1260,7 +1285,6 @@ const settingsManager = {
         formData.append('existing_logo_url', state.currentLogo || '');
         formData.append('existing_cover_url', state.currentCover || '');
 
-        // Fichiers (Pièces jointes)
         const logoFile = document.getElementById('file-logo').files[0];
         const coverFile = document.getElementById('file-cover').files[0];
         if(logoFile) formData.append('logo', logoFile);
@@ -1268,7 +1292,7 @@ const settingsManager = {
 
         const res = await fetch('/api/admin/my-complex', {
             method: 'POST',
-            body: formData // PAS DE HEADERS ICI !
+            body: formData
         });
 
         if(res.ok) {
@@ -1277,9 +1301,7 @@ const settingsManager = {
         } else {
             utils.toast('Erreur', 'Le serveur a refusé la mise à jour (Erreur 500)');
         }
-    },
-    saveComplexInfo: () => settingsManager.save(),
-    saveHours: () => settingsManager.save()
+    }
 };
 
 
