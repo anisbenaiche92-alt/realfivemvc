@@ -53,6 +53,7 @@ exports.createAndPay = async (req, res) => {
         // 1. Mise à jour du téléphone dans la table users
         if (phone) {
             await db.query('UPDATE users SET phone = ? WHERE id = ?', [phone, userId]);
+            if (req.session.user) req.session.user.phone = phone;
         }
 
         const start = `${date} ${time}:00`;
