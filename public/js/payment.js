@@ -14,34 +14,36 @@ let creationData = {};
 let userHasPhone = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. VÉRIFICATION AUTHENTIFICATION ET TÉLÉPHONE
+    // 1. VÉRIFICATION VIA LE PROFIL (Source la plus à jour)
     try {
-        const auth = await fetch('/api/me');
-        const user = await auth.json();
-        if(user.loggedIn && user.user.phone) {
-            userHasPhone = true;
-            document.getElementById('user-phone').value = user.user.phone;
-        }
-    } catch(e) { console.error("Erreur auth", e); }
+        const res = await fetch('/api/profile'); // Utilise /api/profile au lieu de /api/me
+        const user = await res.json();
+        
+        // On vérifie si le numéro existe dans la base de données
+        if(user && user.phone && String(user.phone).trim() !== "") {
+            userHasPhone = true; 
+            const input = document.getElementById('user-phone');
+            if(input) input.value = user.phone;
 
-    // 2. CHARGEMENT DES DONNÉES SELON LE CAS
+            // Masque le bloc de saisie car le numéro est déjà connu
+            const container = document.getElementById('phone-input-container');
+            if(container) container.classList.add('hidden');
+        }
+    } catch(e) { console.error("Erreur détection profil", e); }
+
+    // 2. CHARGEMENT ET SAUT AUTOMATIQUE
     if (matchId) {
-        // Cas : On rejoint un match (on paye forcément 1 place)
         loadExistingMatch(matchId);
-        // On peut cacher l'étape 1 (choix des places) car on paye pour soi
-        document.getElementById('step-1').classList.add('hidden');
-        document.getElementById('step-2').classList.remove('hidden');
-        currentStep = 2;
-        updateDots(2);
-    } 
-    else if (mode === 'creation') {
+        // Si on a le téléphone, on saute directement à l'étape 3
+        if (userHasPhone) {
+            goToStep(3);
+        } else {
+            goToStep(2);
+        }
+    } else if (mode === 'creation') {
         loadCreationDetails();
-    } 
-    else {
-        window.location.href = '/dashboard-joueur.html';
     }
 });
-
 /**
  * CHARGEMENT : MATCH EXISTANT (Invitation)
  */
@@ -76,8 +78,22 @@ function loadCreationDetails() {
  * NAVIGATION : SYSTÈME DE STEPS
  */
 function goToStep(step) {
-    // Validation téléphone à l'étape 2
-    if(currentStep === 2 && step === 3) {
+    // AIGUILLAGE AUTOMATIQUE : Si on veut aller à l'étape 2 mais qu'on a déjà le tel
+    if (step === 2 && userHasPhone) {
+        // Si on vient de l'étape 1, on saute à la 3
+        if (currentStep === 1) {
+            goToStep(3);
+            return;
+        }
+        // Si on vient de l'étape 3 (bouton retour), on saute à la 1
+        if (currentStep === 3) {
+            goToStep(1);
+            return;
+        }
+    }
+
+    // Validation sécurité pour l'étape du téléphone (si on doit la voir)
+    if(currentStep === 2 && step === 3 && !userHasPhone) {
         const phone = document.getElementById('user-phone').value;
         if(!phone || phone.length < 10) {
             alert("Veuillez entrer un numéro de téléphone valide.");
@@ -85,11 +101,14 @@ function goToStep(step) {
         }
     }
 
+    // Cache l'ancienne étape, affiche la nouvelle
     document.getElementById(`step-${currentStep}`).classList.add('hidden');
     document.getElementById(`step-${step}`).classList.remove('hidden');
+    
     updateDots(step);
     currentStep = step;
 
+    // Mise à jour du texte récapitulatif
     if(step === 3 && document.getElementById('summary-slots')) {
         document.getElementById('summary-slots').innerText = `Pour ${slotsToPay} place${slotsToPay > 1 ? 's' : ''}`;
     }
